@@ -1,0 +1,7 @@
+*.xml
+*.log
+*.json
+r8udbBot.cfg
+venv/
+.idea/
+__pycache__/
