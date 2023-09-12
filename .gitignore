@@ -1,6 +1,7 @@
 *.xml
 *.log
 *.json
+*.csv
 r8udbBot.cfg
 venv/
 .idea/

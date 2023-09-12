@@ -10,11 +10,10 @@ from googleapiclient.errors import HttpError
 from r8udbBotInclude import SPREADSHEET_ID, SECURITY_FILE
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-columns = ['SID', 'Discord Name', 'Run8 Name', 'UID', 'Role', 'Password', 'Join',
-           'IP', 'Ban', 'Ban Date', 'Ban Duration', 'Notes']
-col_names = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-FULL_SHEET_RANGE = 'A:' + col_names[len(columns) - 1]
-
+COLUMNS = ['SID', 'Discord Name', 'Discord ID', 'Run8 Name', 'UID', 'Role', 'Password',
+           'Join', 'IP', 'Ban', 'Ban Date', 'Ban Duration', 'Notes']
+COL_NAMES = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+FULL_SHEET_RANGE = 'A:' + COL_NAMES[len(COLUMNS) - 1]
 
 XML_ROOT_NAME = 'HostSecurityData'
 XML_BANNED_CATEGORY_NAME = 'Banned_Users'
@@ -25,10 +24,10 @@ XML_NAME = 'Name'
 XML_UID = 'UID'
 XML_IP = 'IP'
 XML_PASSWORD = 'Password'
-xml_dict = \
+XML_DICT = \
     {XML_ROOT_NAME: {XML_BANNED_CATEGORY_NAME: {XML_BANNED_NAME: []}, XML_UNIQUE_CATEGORY_NAME: {XML_UNIQUE_NAME: []}}}
-ban_dict = xml_dict[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
-usr_dict = xml_dict[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
+BAN_DICT = XML_DICT[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
+USR_DICT = XML_DICT[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
 
 
 def auth_sheet():
@@ -60,10 +59,10 @@ def get_index(search_string: str, search_col: str, this_sheet) -> int:
     NOTE: Will return first instance if there are duplicates
     """
     try:
-        if search_col not in columns:
+        if search_col not in COLUMNS:
             return -1  # Invalid search column specified
-        search_range = (f'{col_names[columns.index(search_col)]}:'
-                        f'{col_names[columns.index(search_col)]}')
+        search_range = (f'{COL_NAMES[COLUMNS.index(search_col)]}:'
+                        f'{COL_NAMES[COLUMNS.index(search_col)]}')
         res = this_sheet.values().get(spreadsheetId=SPREADSHEET_ID,
                                       range=search_range).execute()
         val = res.get('values', [])
@@ -87,8 +86,8 @@ def get_last_row(this_sheet) -> int:
 
 def get_highest_val(search_col, this_sheet) -> int:
     t = 0
-    search_range = (f'{col_names[columns.index(search_col)]}:'
-                    f'{col_names[columns.index(search_col)]}')
+    search_range = (f'{COL_NAMES[COLUMNS.index(search_col)]}:'
+                    f'{COL_NAMES[COLUMNS.index(search_col)]}')
     res = this_sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=search_range).execute()
     val = res.get('values', [])
     try:
@@ -110,10 +109,10 @@ def get_element(index: int, search_col: str, this_sheet):
     :return:
     """
     try:
-        if search_col not in columns:
+        if search_col not in COLUMNS:
             return -1  # Invalid search column specified
-        search_range = (f'{col_names[columns.index(search_col)]}:'
-                        f'{col_names[columns.index(search_col)]}')
+        search_range = (f'{COL_NAMES[COLUMNS.index(search_col)]}:'
+                        f'{COL_NAMES[COLUMNS.index(search_col)]}')
         res = this_sheet.values().get(spreadsheetId=SPREADSHEET_ID,
                                       range=search_range).execute()
         val = res.get('values', [])
@@ -128,10 +127,10 @@ def get_element(index: int, search_col: str, this_sheet):
 
 def set_element(index: int, search_col: str, write_val: str, this_sheet):
     try:
-        if search_col not in columns:
+        if search_col not in COLUMNS:
             return -1  # Invalid search column specified
-        search_range = (f'{col_names[columns.index(search_col)]}:'
-                        f'{col_names[columns.index(search_col)]}')
+        search_range = (f'{COL_NAMES[COLUMNS.index(search_col)]}:'
+                        f'{COL_NAMES[COLUMNS.index(search_col)]}')
         cell = search_range + str(index)
         this_sheet.values().update(spreadsheetId=SPREADSHEET_ID, range=cell,
                                    valueInputOption="USER_ENTERED",
@@ -151,19 +150,19 @@ def write_security_file(this_sheet):
         else:
             print(f'Found {len(sheetvalues)} rows:')
             for sheetvalue in sheetvalues:
-                if sheetvalue[columns.index('Ban')] == 'Y':
-                    ban_dict.append({XML_NAME: sheetvalue[columns.index('Run8 Name')],
-                                     XML_UID: sheetvalue[columns.index('UID')],
-                                     XML_IP: sheetvalue[columns.index('IP')]})
-                elif sheetvalue[columns.index('Ban')] == 'N':
-                    usr_dict.append({XML_NAME: sheetvalue[columns.index('Run8 Name')],
-                                     XML_UID: sheetvalue[columns.index('UID')],
-                                     XML_PASSWORD: sheetvalue[columns.index('Password')]})
+                if sheetvalue[COLUMNS.index('Ban')] == 'Y':
+                    BAN_DICT.append({XML_NAME: sheetvalue[COLUMNS.index('Run8 Name')],
+                                     XML_UID: sheetvalue[COLUMNS.index('UID')],
+                                     XML_IP: sheetvalue[COLUMNS.index('IP')]})
+                elif sheetvalue[COLUMNS.index('Ban')] == 'N':
+                    USR_DICT.append({XML_NAME: sheetvalue[COLUMNS.index('Run8 Name')],
+                                     XML_UID: sheetvalue[COLUMNS.index('UID')],
+                                     XML_PASSWORD: sheetvalue[COLUMNS.index('Password')]})
 
     except HttpError as err:
         print(err)
 
-    xml_out = xmltodict.unparse(xml_dict, pretty=True)
+    xml_out = xmltodict.unparse(XML_DICT, pretty=True)
     print(xml_out)
 
     wp = open(SECURITY_FILE, 'w')

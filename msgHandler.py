@@ -26,15 +26,36 @@ def generate_password(length=20,
 
 
 def add_user(name: str, user_sheet):
+    if '<@' in name:
+        return add_user_by_id_(name, user_sheet)
     # First, check to see if user exists - if so exit
     if sheetHandler.get_index(name, 'Discord Name', user_sheet) != -1:
         return f'[r8udbBot: NAME ERROR] Discord name "{name}" already exists'
     nextrow = sheetHandler.get_last_row(user_sheet) + 1
     nextsid = sheetHandler.get_highest_val('SID', user_sheet) + 1
     newpass = generate_password(random.randint(15, 25))
-    joindate = datetime.date.today().strftime('%m/%d/%y')
+    joindate = datetime.date.today().strftime('%#m/%#d/%y')
     sheetHandler.set_element(nextrow, 'SID', str(nextsid), user_sheet)
     sheetHandler.set_element(nextrow, 'Discord Name', name, user_sheet)
+    sheetHandler.set_element(nextrow, 'Password', newpass, user_sheet)
+    sheetHandler.set_element(nextrow, 'Join', joindate, user_sheet)
+    sheetHandler.set_element(nextrow, 'Ban', 'N', user_sheet)
+    return f'{name} (SID: {nextsid}) added on {joindate}, pass: {newpass}'
+
+
+def add_user_by_id_(name: str, user_sheet):
+    # Strip off <@ > decorators from id
+    name = name[2:]
+    name = name[:-1]
+    # Check to see if user exists - if so exit
+    if sheetHandler.get_index(name, 'Discord ID', user_sheet) != -1:
+        return f'[r8udbBot: ID ERROR] Discord ID {name} already exists'
+    nextrow = sheetHandler.get_last_row(user_sheet) + 1
+    nextsid = sheetHandler.get_highest_val('SID', user_sheet) + 1
+    newpass = generate_password(random.randint(15, 25))
+    joindate = datetime.date.today().strftime('%#m/%#d/%y')
+    sheetHandler.set_element(nextrow, 'SID', str(nextsid), user_sheet)
+    sheetHandler.set_element(nextrow, 'Discord ID', name, user_sheet)
     sheetHandler.set_element(nextrow, 'Password', newpass, user_sheet)
     sheetHandler.set_element(nextrow, 'Join', joindate, user_sheet)
     sheetHandler.set_element(nextrow, 'Ban', 'N', user_sheet)
@@ -57,7 +78,7 @@ def add_note(sid, note, user_sheet):
 
 def ban_user(sid, duration: int, reason: str, user_sheet):
     try:
-        bandate = datetime.date.today().strftime('%m/%d/%y')
+        bandate = datetime.date.today().strftime('%#m/%#d/%y')
         index = sheetHandler.get_index(sid, 'SID', user_sheet)
         if index < 0:
             return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
@@ -113,14 +134,14 @@ def show_user(sid, user_sheet):
     if index < 0:
         return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
     retStr = ''
-    for item in sheetHandler.columns:
+    for item in sheetHandler.COLUMNS:
         retStr += f'**{item}**: {sheetHandler.get_element(index, item, user_sheet)}\n'
     return retStr
 
 
 def unban_user(sid, user_sheet):
     try:
-        currdate = datetime.date.today().strftime('%m/%d/%y')
+        currdate = datetime.date.today().strftime('%#m/%#d/%y')
         index = sheetHandler.get_index(sid, 'SID', user_sheet)
         if index < 0:
             return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
@@ -150,7 +171,7 @@ def new_pass(uname, user_sheet):
         return f'[r8udbBot: HTTP ERROR] {err}'
 
 
-def get_response(message: str, user: str, roles: list, channel: str, user_sheet) -> str:
+def get_response(message: str, uname: str, usrid: int, roles: list, channel: str, user_sheet) -> str:
     ###
     # Main function to handle bot commands
     ###
@@ -232,7 +253,7 @@ def get_response(message: str, user: str, roles: list, channel: str, user_sheet)
         if channel != (CH_USER or CH_ADMIN):
             return ''
         if USR_LVL2 in rolelist:
-            return new_pass(user, user_sheet)
+            return new_pass(uname, user_sheet)
         else:
             return 'Invalid user role for command'
 
@@ -240,7 +261,7 @@ def get_response(message: str, user: str, roles: list, channel: str, user_sheet)
         if channel != (CH_USER or CH_ADMIN):
             return ''
         if USR_LVL2 in rolelist:
-            return show_pass(user, user_sheet)
+            return show_pass(uname, user_sheet)
         else:
             return '[r8udbBot: Permissions error] Invalid user role for command'
 
