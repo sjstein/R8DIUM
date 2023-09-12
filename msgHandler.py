@@ -70,7 +70,7 @@ def add_note(sid, note, user_sheet):
     if value == -1:
         value = ''
     if value:
-        update = value + ', ' + str(note)
+        update = value + '| ' + str(note)
         sheetHandler.set_element(index, "Notes", update, user_sheet)
     else:
         sheetHandler.set_element(index, "Notes", str(note), user_sheet)
@@ -115,11 +115,11 @@ def show_notes(sid, user_sheet):
     return sheetHandler.get_element(index, 'Notes', user_sheet)
 
 
-def show_pass(uname, user_sheet):
+def show_pass(discord_id, user_sheet):
     try:
-        index = sheetHandler.get_index(uname, "Discord Name", user_sheet)
+        index = sheetHandler.get_index(discord_id, "Discord ID", user_sheet)
         if index < 0:
-            return f'[r8udbBot: INDEX ERROR] User "{uname}" not found'
+            return f'[r8udbBot: INDEX ERROR] ID "{discord_id}" not found'
         if sheetHandler.get_element(index, "Ban", user_sheet) != 'N':
             return f'You are currently banned'  # Don't let banned users see their password
         result = sheetHandler.get_element(index, "Password", user_sheet)
@@ -148,7 +148,7 @@ def unban_user(sid, user_sheet):
         sheetHandler.set_element(index, 'Ban', 'N', user_sheet)
         sheetHandler.set_element(index, 'Ban Date', '', user_sheet)
         sheetHandler.set_element(index, 'Ban Duration', '', user_sheet)
-        add_note(sid, f'UNbanned ({currdate}) by admin override', user_sheet)
+        add_note(sid, f'Ubanned ({currdate}) by admin override', user_sheet)
         uname = sheetHandler.get_element(index, 'Discord Name', user_sheet)
         return f'User "{uname}" [SID: {sid}] **Unbanned**'
 
@@ -156,11 +156,11 @@ def unban_user(sid, user_sheet):
         return f'[r8udbBot: HTTP ERROR] {err}'
 
 
-def new_pass(uname, user_sheet):
+def new_pass(discord_id, user_sheet):
     try:
-        index = sheetHandler.get_index(uname, "Discord Name", user_sheet)
+        index = sheetHandler.get_index(discord_id, "Discord ID", user_sheet)
         if index < 0:
-            return f'[r8udbBot: INDEX ERROR] User "{uname}" not found'
+            return f'[r8udbBot: INDEX ERROR] ID "{discord_id}" not found'
         if sheetHandler.get_element(index, "Ban", user_sheet) != 'N':
             return f'You are currently banned'
         newpw = generate_password(random.randint(15, 25))
@@ -171,7 +171,7 @@ def new_pass(uname, user_sheet):
         return f'[r8udbBot: HTTP ERROR] {err}'
 
 
-def get_response(message: str, uname: str, usrid: int, roles: list, channel: str, user_sheet) -> str:
+def get_response(message: str, uname: str, discord_id: int, roles: list, channel: str, user_sheet) -> str:
     ###
     # Main function to handle bot commands
     ###
@@ -250,18 +250,18 @@ def get_response(message: str, uname: str, usrid: int, roles: list, channel: str
     # User commands
     #
     if p_message == 'newpass':
-        if channel != (CH_USER or CH_ADMIN):
+        if channel != CH_USER:
             return ''
         if USR_LVL2 in rolelist:
-            return new_pass(uname, user_sheet)
+            return new_pass(discord_id, user_sheet)
         else:
             return 'Invalid user role for command'
 
     if p_message == 'showpass':
-        if channel != (CH_USER or CH_ADMIN):
+        if channel != CH_USER:
             return ''
         if USR_LVL2 in rolelist:
-            return show_pass(uname, user_sheet)
+            return show_pass(discord_id, user_sheet)
         else:
             return '[r8udbBot: Permissions error] Invalid user role for command'
 
