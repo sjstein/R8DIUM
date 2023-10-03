@@ -125,6 +125,21 @@ def get_element(index: int, search_col: str, this_sheet):
         return ''
 
 
+def get_col(search_col: str, this_sheet) -> list:
+    try:
+        if search_col not in COLUMNS:
+            return []  # Invalid search column specified
+        search_range = (f'{COL_NAMES[COLUMNS.index(search_col)]}:'
+                        f'{COL_NAMES[COLUMNS.index(search_col)]}')
+        res = this_sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+                                      range=search_range).execute()
+        val = res.get('values', [])
+        return val
+
+    except HttpError as err:
+        print(err)
+
+
 def set_element(index: int, search_col: str, write_val: str, this_sheet):
     try:
         if search_col not in COLUMNS:
