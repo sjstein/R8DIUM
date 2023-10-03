@@ -203,14 +203,16 @@ def add_new_user(name: str, ldb: list):
     record[sid] = str(new_sid)
     if '<@' in name:  # Sent a discord ID
         record[discord_id] = name
+        if record[discord_name] == '':
+            record[discord_name] = 'Unknown'
     else:
         record[discord_name] = name
+        if record[discord_id] == '':
+            record[discord_id] = 'Unknown'
     if new_sid <= len(ldb):
         ldb.insert(new_sid - 1, record)
-        print(f'inserted')
     else:
         ldb.append(record)
-        print('appended')
     return new_sid
 
 
