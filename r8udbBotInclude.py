@@ -5,12 +5,12 @@ CONFIG_FILE = 'r8udbBot.cfg'
 config = configparser.ConfigParser()
 config.read(CONFIG_FILE)
 
+# Local configuration options
+USER_DB = config['local']['db_name']
+DB_FILENAME = USER_DB + '.csv'
+
 # Discord bot unique token
 TOKEN = config['discord']['bot_token']
-
-# Discord bot command designators
-BOT_CMD = config['discord']['bot_cmd']
-DM_CMD = config['discord']['bot_dm']
 
 # Discord user levels (roles)
 USR_LVL0 = config['discord']['usr_lvl0']
@@ -26,4 +26,4 @@ CH_USER = config['discord']['ch_1']
 SECURITY_FILE = config['run8']['security_file']
 
 # Google sheet unique ID
-SPREADSHEET_ID = config['google']['sheet_id']
+# SPREADSHEET_ID = config['google']['sheet_id']

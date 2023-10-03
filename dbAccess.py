@@ -1,0 +1,256 @@
+import csv
+import xmltodict
+from r8udbBotInclude import SECURITY_FILE, DB_FILENAME
+
+XML_ROOT_NAME = 'HostSecurityData'
+XML_BANNED_CATEGORY_NAME = 'Banned_Users'
+XML_BANNED_NAME = 'BannedUser'
+XML_UNIQUE_CATEGORY_NAME = 'Unique_Logins'
+XML_UNIQUE_NAME = 'UniqueLogin'
+XML_NAME = 'Name'
+XML_UID = 'UID'
+XML_IP = 'IP'
+XML_PASSWORD = 'Password'
+XML_DICT = \
+    {XML_ROOT_NAME: {XML_BANNED_CATEGORY_NAME: {XML_BANNED_NAME: []}, XML_UNIQUE_CATEGORY_NAME: {XML_UNIQUE_NAME: []}}}
+BAN_DICT = XML_DICT[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
+USR_DICT = XML_DICT[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
+
+# Field names
+sid = 'sid'  # int (unique)
+discord_name = 'discord_name'  # str
+discord_id = 'discord_id'  # int
+run8_name = 'run8_name'  # str
+uid = 'uid'  # str
+role = 'role'  # str
+password = 'password'  # str
+join_date = 'join_date'  # str
+ip = 'ip'  # str
+banned = 'banned'  # bool
+ban_date = 'ban_date'  # str
+ban_duration = 'ban_duration'  # str
+notes = 'notes'  # str[]
+
+db_field_list = [sid,
+                 discord_name,
+                 discord_id,
+                 run8_name,
+                 uid,
+                 role,
+                 password,
+                 join_date,
+                 ip,
+                 banned,
+                 ban_date,
+                 ban_duration,
+                 notes]
+
+
+def load_db(filename: str) -> list:
+    ldb = list()
+    with open(filename, newline='') as csvfile:
+        input_file = csv.DictReader(csvfile)
+        for row in input_file:
+            ldb.append(row)
+    return ldb
+
+
+def save_db(filename: str, ldb: list) -> int:
+    with open(filename, 'w', newline='') as csvfile:
+        csvwriter = csv.DictWriter(csvfile, fieldnames=db_field_list)
+        csvwriter.writeheader()
+        for row in ldb:
+            csvwriter.writerow(row)
+    return len(ldb)
+
+
+def write_security_file(ldb):
+    for record in ldb:
+        if record[banned] == 'True':
+            BAN_DICT.append({XML_NAME: record[run8_name],
+                             XML_UID: record[uid],
+                             XML_IP: record[ip]})
+        elif record[banned] == 'False' and record[password] != '':  # Don't save users without pw
+            USR_DICT.append({XML_NAME: record[run8_name],
+                             XML_UID: record[uid],
+                             XML_PASSWORD: record[password]})
+
+    xml_out = xmltodict.unparse(XML_DICT, pretty=True)
+    print(xml_out)
+
+    wp = open(SECURITY_FILE, 'w')
+    wp.write(xml_out)
+    wp.close()
+    return 'file written'
+
+
+def merge_security_file(ldb):
+    # Read current HostSecurity file and update UID fields based on password (gross)
+    fp = open(SECURITY_FILE, 'r')
+    xml_in = xmltodict.parse(fp.read(), process_namespaces=True)
+    fp.close()
+    update_flag = False
+    retstr = '`Merge results:\n-------------\n'
+
+    if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]) == dict:
+        # Edge case to take of a single entry for XML-UNIQUE_NAME
+        return f'File merge error : only one {XML_UNIQUE_NAME} entry found - add one blank in XML and retry'
+
+    for record in range(0, len(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME])):
+        retstr += f'{record : 03d}: '
+        new_sid = get_element(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_PASSWORD],
+                              password, sid, ldb)
+        if new_sid != -1:  # Found xml password in database
+            current_uid = get_element(new_sid, sid, uid, ldb)
+            new_r8name = ''
+            new_uid = ''
+            if current_uid == '' or current_uid.lower() == 'none':  # No UID in database, so populate with XML version
+                try:
+                    new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
+                    new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
+                    update_flag = True
+                    retstr += f'added UID[{new_uid}] and R8_name [{new_r8name}] ' \
+                              f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
+                except KeyError:
+                    retstr += f'Found password but no UID (in XML) for ' \
+                              f'SID[{new_sid}]\n'
+            else:   # UID found in XML
+                try:
+                    new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][XML_UID]
+                    new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][XML_NAME]
+                    if new_uid != current_uid:
+                        # db and xml do not match, what to do? Just notify user for now
+                        # Maybe we should start keeping a list of these UIDs? (ala Notes)
+                        retstr += f'Existing UID mismatch for SID[{new_sid}]:\n'
+                        retstr += f' database file UID: {current_uid}\n'
+                        retstr += f' host_security UID: {new_uid}\n'
+                        retstr += (f'Database file NOT updated for this record\n'
+                                   f'-----------------------------------------')
+                    else:
+                        retstr += f'Existing UID valid for SID[{new_sid}]\n'
+                except KeyError:
+                    retstr += f'Found password but no UID (in XML) for SID {new_sid}'
+            if update_flag:
+                set_element(new_sid, sid, run8_name, new_r8name, ldb)  # Updating this for no real reason atm
+                set_element(new_sid, sid, uid, new_uid, ldb)
+                save_db(DB_FILENAME, ldb)
+        else:
+            retstr += f'Password '
+            retstr += f'[{xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_PASSWORD]}]'
+            retstr += ' not found\n'
+    return retstr
+
+def get_index(search_string, search_col: str, ldb: list):
+    """
+    Return index of record keyed off of <search_string> contained in column <search_col>
+    returns (-1) if string not found or invalid column name is specified.
+    NOTE: Will return first instance if there are duplicates
+    """
+    index = 0
+    try:
+        for line in ldb:
+            if line[str(search_col)] == str(search_string):
+                return index
+            index += 1
+        return -1
+
+    except Exception as e:
+        print(f'{get_element.__name__} : {e.__class__.__name__} ({e})')
+        return -1
+
+
+def get_element(search_string, search_col: str, return_col: str, ldb: list):
+    """
+    Return value in return_col column keyed off of <search_string> contained in column <search_col>
+    returns (-1) if string not found or invalid column name is specified.
+    NOTE: Will return first instance if there are duplicates
+    """
+    try:
+        for line in ldb:
+            if line[str(search_col)] == str(search_string):
+                return line[str(return_col)]
+        return -1
+
+    except Exception as e:
+        print(f'{get_element.__name__} : {e.__class__.__name__} ({e})')
+        return -1
+
+
+def set_element(search_string: str, search_col: str, set_col: str, set_val, ldb: list):
+    """
+    Set the value <set_val> to column <set_col> of the row found with <search_col> == <search_string>
+    returns sid of record which has been modified
+    returns (-1) if no record found
+    NOTE: Will hit on first match if multiples exist
+    """
+    try:
+        for line in ldb:
+            if line[str(search_col)] == str(search_string):
+                line[str(set_col)] = str(set_val)
+                return line[sid]
+        return -1
+
+    except Exception as e:
+        print(f'{set_element.__name__} : {e.__class__.__name__} ({e})')
+        return -1
+
+
+def add_new_user(name: str, ldb: list):
+    new_sid = next_avail_sid(ldb)
+    record = {}
+    for field in db_field_list:
+        record[field] = ''
+    record[sid] = str(new_sid)
+    if '<@' in name:  # Sent a discord ID
+        record[discord_id] = name
+    else:
+        record[discord_name] = name
+    if new_sid <= len(ldb):
+        ldb.insert(new_sid - 1, record)
+        print(f'inserted')
+    else:
+        ldb.append(record)
+        print('appended')
+    return new_sid
+
+
+def del_user(search_sid, ldb):
+    # Find index in ldb corresponding to sid and remove
+    index = get_index(str(search_sid), sid, ldb)
+    if index < 0:
+        return -1
+    del ldb[index]
+    return index
+
+
+def next_avail_sid(ldb: list):
+    index = 0
+    for row in ldb:
+        if int(row[sid]) - index > 1:
+            # Found empty row
+            return index + 1
+        else:
+            if int(row[sid]) > index:
+                index = int(row[sid])
+    return index + 1
+
+
+if __name__ == '__main__':
+    localDb = load_db(DB_FILENAME)
+    print(merge_security_file(localDb))
+    # write_security_file(localDb)
+
+    # for l in localDb:
+    #     print(l)
+    #     print(f'sid:{l[sid]}')
+    #
+    # print(f'-----\ndeleting user 5 : {del_user(5, localDb)}')
+    #
+    # for l in localDb:
+    #     print(l)
+    #
+    # print(f'next available sid: {next_avail_sid(localDb)}')
+    # print(f'Search for Sinistar: {get_element("Sinistar", discord_name, run8_name, localDb)}')
+    # print(f'Setting new run_8 name at sid: {set_element("Sinistar", discord_name, run8_name, "New_run8_name", localDb)}')
+    # print(f'Search for sid 38: {get_element(38, sid, discord_name, localDb)}')
+    # print(f'Added new user at sid: {add_new_user("Mr New User", localDb)}')
