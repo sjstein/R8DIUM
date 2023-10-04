@@ -116,8 +116,8 @@ def merge_security_file(ldb):
                               f'SID[{new_sid}]\n'
             else:   # UID found in XML
                 try:
-                    new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][XML_UID]
-                    new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][XML_NAME]
+                    new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
+                    new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
                     if new_uid != current_uid:
                         # db and xml do not match, what to do? Just notify user for now
                         # Maybe we should start keeping a list of these UIDs? (ala Notes)
