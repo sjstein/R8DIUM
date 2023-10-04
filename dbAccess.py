@@ -198,20 +198,15 @@ def set_element(search_string: str, search_col: str, set_col: str, set_val, ldb:
         return -1
 
 
-def add_new_user(name: str, ldb: list):
+def add_new_user(name: str, user_name, ldb: list):
     new_sid = next_avail_sid(ldb)
     record = {}
     for field in db_field_list:
         record[field] = ''
     record[sid] = str(new_sid)
-    if '<@' in name:  # Sent a discord ID
-        record[discord_id] = name[2:-1]  # Strip off Discord md codes
-        if record[discord_name] == '':
-            record[discord_name] = 'Unknown'
-    else:
-        record[discord_name] = name
-        if record[discord_id] == '':
-            record[discord_id] = 'Unknown'
+    record[discord_id] = name[2:-1]  # Strip off Discord md codes
+    if record[discord_name] == '':
+        record[discord_name] = user_name
     if new_sid <= len(ldb):
         ldb.insert(new_sid - 1, record)
     else:

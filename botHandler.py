@@ -79,13 +79,14 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='add_user',
-                         description='Add a new user <user_name/id>')
-    @app_commands.describe(name_or_id='User name or @id')
-    async def add_user(interaction: discord.Interaction, name_or_id: str):
+                         description='Add a new user <discord_id>')
+    @app_commands.describe(discord_id='@id')
+    async def add_user(interaction: discord.Interaction, discord_id: str):
         channel, roles = msg_auth(interaction)
         if user_level(roles) <= BOT_ROLES.index(USR_LVL1):
             if channel == CH_ADMIN:
-                response = msgHandler.add_user(name_or_id, ldb)
+                discord_name = await client.fetch_user(int(discord_id[2:-1]))
+                response = msgHandler.add_user(discord_id, discord_name, ldb)
             else:
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
