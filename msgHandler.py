@@ -20,6 +20,8 @@ def generate_password(length=20,
         chars += string.digits
     if special:
         chars += string.punctuation
+    # Keep generating a password until one without reserved (xml) characters are present
+
     pw = random.choices(chars, k=length)
     return ''.join(pw)
 
