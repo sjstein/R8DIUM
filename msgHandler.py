@@ -12,6 +12,8 @@ def generate_password(length=20,
                       numbers=True,
                       special=True):
     chars = []
+    xml_chars = ['<', '>', '&', '"', "'"]
+
     if lowercase:
         chars += string.ascii_lowercase
     if uppercase:
@@ -20,8 +22,11 @@ def generate_password(length=20,
         chars += string.digits
     if special:
         chars += string.punctuation
-    # Keep generating a password until one without reserved (xml) characters are present
-
+        for c in xml_chars:
+            try:
+                chars.remove(c)
+            except ValueError:
+                continue
     pw = random.choices(chars, k=length)
     return ''.join(pw)
 
@@ -176,5 +181,8 @@ def new_pass(discord_id, ldb):
 
 
 if __name__ == '__main__':
-    localDb = dbAccess.load_db(DB_FILENAME)
-    print(check_ban_status(38, localDb))
+    for test in range(0, 20):
+        print(f'{test} : {generate_password()}')
+
+    # localDb = dbAccess.load_db(DB_FILENAME)
+    # print(check_ban_status(38, localDb))
