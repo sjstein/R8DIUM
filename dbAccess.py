@@ -11,10 +11,7 @@ XML_NAME = 'Name'
 XML_UID = 'UID'
 XML_IP = 'IP'
 XML_PASSWORD = 'Password'
-XML_DICT = \
-    {XML_ROOT_NAME: {XML_BANNED_CATEGORY_NAME: {XML_BANNED_NAME: []}, XML_UNIQUE_CATEGORY_NAME: {XML_UNIQUE_NAME: []}}}
-BAN_DICT = XML_DICT[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
-USR_DICT = XML_DICT[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
+
 
 # Field names
 sid = 'sid'  # int (unique)
@@ -65,17 +62,22 @@ def save_db(filename: str, ldb: list) -> int:
 
 
 def write_security_file(ldb):
+    xml_dict = \
+        {XML_ROOT_NAME: {XML_BANNED_CATEGORY_NAME: {XML_BANNED_NAME: []},
+                         XML_UNIQUE_CATEGORY_NAME: {XML_UNIQUE_NAME: []}}}
+    ban_list = xml_dict[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
+    usr_list = xml_dict[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
     for record in ldb:
         if record[banned] == 'True':
-            BAN_DICT.append({XML_NAME: record[run8_name],
+            ban_list.append({XML_NAME: record[run8_name],
                              XML_UID: record[uid],
                              XML_IP: record[ip]})
         elif record[banned] == 'False' and record[password] != '':  # Don't save users without pw
-            USR_DICT.append({XML_NAME: record[run8_name],
+            usr_list.append({XML_NAME: record[run8_name],
                              XML_UID: record[uid],
                              XML_PASSWORD: record[password]})
 
-    xml_out = xmltodict.unparse(XML_DICT, pretty=True)
+    xml_out = xmltodict.unparse(xml_dict, pretty=True)
     print(xml_out)
 
     wp = open(SECURITY_FILE, 'w')
