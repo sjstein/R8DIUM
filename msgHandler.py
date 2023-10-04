@@ -65,20 +65,17 @@ def write_field(sid, field_name, write_val, ldb):
         return f'[r8udbBot: WRITE ERROR] unknown failure to write to field: {field_name}'
 
 
-def add_user(name, ldb):
-    if '@' in name:
-        if dbAccess.get_element(name[2:-1], dbAccess.discord_id, dbAccess.sid, ldb) != -1:
-            return f'[r8udbBot: ID ERROR] Discord id "{name}" already exists'
-    elif dbAccess.get_element(name, dbAccess.discord_name, dbAccess.sid,ldb) != -1:
-        return f'[r8udbBot: NAME ERROR] Discord name "{name}" already exists'
-    new_sid = dbAccess.add_new_user(name, ldb)
+def add_user(discord_id, discord_name, ldb):
+    if dbAccess.get_element(discord_id[2:-1], dbAccess.discord_id, dbAccess.sid, ldb) != -1:
+        return f'[r8udbBot: ID ERROR] Discord id "{discord_id}" already exists'
+    new_sid = dbAccess.add_new_user(discord_id, discord_name, ldb)
     new_pass = generate_password(random.randint(15, 25))
     join_date = datetime.date.today().strftime('%#m/%#d/%y')
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, new_pass, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
-    return f'{name} (SID: {new_sid}) added on {join_date}, pass: {new_pass}'
+    return f'{discord_name} (SID: {new_sid}) added on {join_date}, pass: {new_pass}'
 
 
 def delete_user(sid, ldb):
