@@ -142,6 +142,7 @@ def merge_security_file(ldb):
             retstr += ' not found\n'
     return retstr
 
+
 def get_index(search_string, search_col: str, ldb: list):
     """
     Return index of record keyed off of <search_string> contained in column <search_col>
@@ -204,7 +205,7 @@ def add_new_user(name: str, ldb: list):
         record[field] = ''
     record[sid] = str(new_sid)
     if '<@' in name:  # Sent a discord ID
-        record[discord_id] = name
+        record[discord_id] = name[2:-1]  # Strip off Discord md codes
         if record[discord_name] == '':
             record[discord_name] = 'Unknown'
     else:

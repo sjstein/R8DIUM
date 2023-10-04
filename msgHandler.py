@@ -67,7 +67,7 @@ def write_field(sid, field_name, write_val, ldb):
 
 def add_user(name, ldb):
     if '@' in name:
-        if dbAccess.get_element(name, dbAccess.discord_id, dbAccess.sid,ldb) != -1:
+        if dbAccess.get_element(name[2:-1], dbAccess.discord_id, dbAccess.sid, ldb) != -1:
             return f'[r8udbBot: ID ERROR] Discord id "{name}" already exists'
     elif dbAccess.get_element(name, dbAccess.discord_name, dbAccess.sid,ldb) != -1:
         return f'[r8udbBot: NAME ERROR] Discord name "{name}" already exists'
