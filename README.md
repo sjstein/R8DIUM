@@ -2,7 +2,7 @@
 A discord bot to manage individual run8 users
 
 Note: Need to add python env info to make this a reasonable package. Put on the "to-do" list. 
-I **believe** the only unusual library needed is 'discord.py', but it will become obvious if others are needed to be installed
+I **believe** the only unusual libraries needed are 'discord.py' and 'xmltodict.py', but it will become obvious if others are needed to be installed
 
 Project files:
 r8udbBot.py : Entry point
