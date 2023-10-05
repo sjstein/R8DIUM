@@ -60,6 +60,8 @@ def write_field(sid, field_name, write_val, ldb):
         return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
     if int(dbAccess.set_element(sid, dbAccess.sid, field_name, write_val, ldb)) > 0:
         dbAccess.save_db(DB_FILENAME, ldb)
+        if write_val == '':
+            return '<null>'
         return write_val
     else:
         return f'[r8udbBot: WRITE ERROR] unknown failure to write to field: {field_name}'
