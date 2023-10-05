@@ -33,12 +33,27 @@ def run_new_discord_bot(ldb):
     async def on_ready():
         print(f'{client.user} is now running')
         try:
-            synced = await client.tree.sync()
-            print(f'synced {len(synced)} command(s)')
+            command_list = await client.tree.sync()
+            print(f'Registered {len(command_list)} command(s)')
         except Exception as e:
             print(e)
 
-    @client.tree.command(name='list_users', description='List all users in db')
+    @client.tree.command(name='bot_commands', description=f'Show all commands available [{USR_LVL1}]')
+    async def bot_commands(interaction: discord.Interaction):
+        channel, roles = msg_auth(interaction)
+        if user_level(roles) <= BOT_ROLES.index(USR_LVL1):
+            if channel == CH_ADMIN:
+                response = ''
+                command_list = await client.tree.fetch_commands()
+                for command in command_list:
+                    response += f'**{command.name}** : *{command.description}*\n'
+            else:
+                response = '[r8udbBot: Permissions error] Wrong channel for command'
+        else:
+            response = '[r8udbBot: Permissions error] Invalid user role for command'
+        await interaction.response.send_message(response, ephemeral=False)
+
+    @client.tree.command(name='list_users', description=f'List all users in db [{USR_LVL1}]')
     async def list_users(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         if user_level(roles) <= BOT_ROLES.index(USR_LVL1):
@@ -51,7 +66,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='read_notes',
-                         description='Display all notes for user')
+                         description=f'Display all notes for user [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user')
     async def read_notes(interaction: discord.Interaction, sid: int):
         channel, roles = msg_auth(interaction)
@@ -65,7 +80,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='write_note',
-                         description='write note about <sid> ')
+                         description=f'write note about <sid> [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user',
                            note='Note to add to user data')
     async def write_note(interaction: discord.Interaction, sid: int, note: str):
@@ -80,7 +95,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='show_user',
-                         description='Display all fields for user')
+                         description=f'Display all fields for user [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user')
     async def show_user(interaction: discord.Interaction, sid: int):
         channel, roles = msg_auth(interaction)
@@ -94,7 +109,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='add_user',
-                         description='Add a new user <discord_id>')
+                         description=f'Add a new user <discord_id> [{USR_LVL1}]')
     @app_commands.describe(discord_id='@id')
     async def add_user(interaction: discord.Interaction, discord_id: str):
         channel, roles = msg_auth(interaction)
@@ -109,7 +124,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='del_user',
-                         description='Add a new user <user_name/id>')
+                         description=f'Delete user <sid> [{USR_LVL1}]')
     @app_commands.describe(sid='User SID')
     async def del_user(interaction: discord.Interaction, sid: str):
         channel, roles = msg_auth(interaction)
@@ -123,7 +138,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='ban_user',
-                         description='ban user <sid> <duration(days)> <reason(string)>')
+                         description=f'ban user <sid> <duration(days)> <reason(string)> [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user',
                            duration='Length of ban in days',
                            reason='Reason for ban (short description)')
@@ -139,7 +154,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='unban_user',
-                         description='unban user <sid>')
+                         description=f'unban user <sid> [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user')
     async def unban_user(interaction: discord.Interaction, sid: int):
         channel, roles = msg_auth(interaction)
@@ -153,7 +168,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='show_password',
-                         description='Show your password')
+                         description=f'Show your password (your eyes only) [{USR_LVL2}]')
     async def show_password(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         user_id = str(interaction.user.id)
@@ -164,7 +179,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)
 
     @client.tree.command(name='refresh_pass',
-                         description="Refresh user's password")
+                         description=f"Refresh user's password (your eyes only) [{USR_LVL2}]")
     async def refresh_pass(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         user_id = str(interaction.user.id)
@@ -175,7 +190,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)
 
     @client.tree.command(name='generate_pass',
-                         description='Generate a new password for user <sid>')
+                         description=f'Generate a new password for user <sid> [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user')
     async def generate_pass(interaction: discord.Interaction, sid: int):
         channel, roles = msg_auth(interaction)
@@ -190,7 +205,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='arb_read',
-                         description='read value of field <field> of user <sid>')
+                         description=f'read value of field <field> of user <sid> [{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user',
                            field='Field name to show')
     async def arb_read(interaction: discord.Interaction, sid: int, field: str):
@@ -205,7 +220,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='arb_write',
-                         description='write value <val> to field <field> of user <sid>')
+                         description=f'write value <val> to field <field> of user <sid> [{USR_LVL0}]')
     @app_commands.describe(sid='The SID of the user',
                            field='Field name to write to',
                            val='Value to write')
@@ -221,7 +236,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='security_write',
-                         description='write the host security file')
+                         description=f'write the host security file [{USR_LVL0}]')
     async def security_write(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
@@ -234,7 +249,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='security_merge',
-                         description='merge security file into database')
+                         description=f'merge security file into database [{USR_LVL0}]')
     async def security_merge(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
