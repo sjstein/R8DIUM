@@ -24,12 +24,12 @@ def user_level(roles):
 
 
 def log_message(interaction) -> str:
-    log_msg = f'**{interaction.user}** : `{interaction.command.name} '
-    if len(interaction.data['options']) > 0:
+    log_msg = f'**{interaction.user.global_name}** executed: `{interaction.command.name} '
+    if 'options' in interaction.data:
         for parm in interaction.data['options']:
             log_msg += f'{parm["value"]} '
         log_msg = log_msg[:-1]
-    log_msg += '`'
+    log_msg += f'` in channel: *{interaction.channel}*'
     return log_msg
 
 
