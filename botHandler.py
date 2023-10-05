@@ -3,7 +3,7 @@ import discord
 import dbAccess
 import msgHandler
 from r8udbBotInclude import TOKEN, DB_FILENAME
-from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_USER, CH_ADMIN, BOT_ROLES
+from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_USER, CH_ADMIN, BOT_ROLES, CH_LOG
 
 
 def msg_auth(interaction):
@@ -21,6 +21,16 @@ def user_level(roles):
             if BOT_ROLES.index(single_role) < security_lvl:
                 security_lvl = BOT_ROLES.index(single_role)
     return security_lvl
+
+
+def log_message(interaction) -> str:
+    log_msg = f'**{interaction.user}** : `{interaction.command.name} '
+    if len(interaction.data['options']) > 0:
+        for parm in interaction.data['options']:
+            log_msg += f'{parm["value"]} '
+        log_msg = log_msg[:-1]
+    log_msg += '`'
+    return log_msg
 
 
 def run_new_discord_bot(ldb):
@@ -51,6 +61,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='list_users', description=f'List all users in db [{USR_LVL1}]')
@@ -63,6 +76,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='read_notes',
@@ -77,6 +93,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='write_note',
@@ -92,6 +111,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='show_user',
@@ -106,6 +128,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='add_user',
@@ -121,6 +146,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='del_user',
@@ -135,6 +163,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='ban_user',
@@ -151,6 +182,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='unban_user',
@@ -165,6 +199,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='show_password',
@@ -176,6 +213,9 @@ def run_new_discord_bot(ldb):
             response = msgHandler.show_pass(user_id, ldb)
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=True)
 
     @client.tree.command(name='refresh_pass',
@@ -187,6 +227,9 @@ def run_new_discord_bot(ldb):
             response = msgHandler.new_pass(user_id, ldb)
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=True)
 
     @client.tree.command(name='generate_pass',
@@ -202,6 +245,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='arb_read',
@@ -217,6 +263,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='arb_write',
@@ -233,6 +282,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='security_write',
@@ -246,6 +298,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='security_merge',
@@ -259,6 +314,9 @@ def run_new_discord_bot(ldb):
                 response = '[r8udbBot: Permissions error] Wrong channel for command'
         else:
             response = '[r8udbBot: Permissions error] Invalid user role for command'
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
     client.run(TOKEN)
