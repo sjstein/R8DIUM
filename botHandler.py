@@ -64,6 +64,21 @@ def run_new_discord_bot(ldb):
             response = '[r8udbBot: Permissions error] Invalid user role for command'
         await interaction.response.send_message(response, ephemeral=False)
 
+    @client.tree.command(name='write_note',
+                         description='write note about <sid> ')
+    @app_commands.describe(sid='The SID of the user',
+                           note='Note to add to user data')
+    async def write_note(interaction: discord.Interaction, sid: int, note: str):
+        channel, roles = msg_auth(interaction)
+        if user_level(roles) <= BOT_ROLES.index(USR_LVL1):
+            if channel == CH_ADMIN:
+                response = msgHandler.add_note(sid, note, ldb)
+            else:
+                response = '[r8udbBot: Permissions error] Wrong channel for command'
+        else:
+            response = '[r8udbBot: Permissions error] Invalid user role for command'
+        await interaction.response.send_message(response, ephemeral=False)
+
     @client.tree.command(name='show_user',
                          description='Display all fields for user')
     @app_commands.describe(sid='The SID of the user')
