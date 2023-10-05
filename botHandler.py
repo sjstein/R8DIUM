@@ -273,7 +273,7 @@ def run_new_discord_bot(ldb):
     @app_commands.describe(sid='The SID of the user',
                            field='Field name to write to',
                            val='Value to write')
-    async def arb_write(interaction: discord.Interaction, sid: int, field: str, val: str):
+    async def arb_write(interaction: discord.Interaction, sid: int, field: str, val: str = ''):
         channel, roles = msg_auth(interaction)
         if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
             if channel == CH_ADMIN:
