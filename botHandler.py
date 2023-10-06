@@ -68,7 +68,7 @@ def run_new_discord_bot(ldb):
             await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
-    @client.tree.command(name='list_users', description=f'List all users in db [{USR_LVL1}]')
+    @client.tree.command(name='list_users', description=f'List all users in database [{USR_LVL1}]')
     async def list_users(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         successful_cmd = False
@@ -86,7 +86,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='read_notes',
-                         description=f'Display all notes for user [{USR_LVL1}]')
+                         description=f'Display all notes for user <sid>[{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user')
     async def read_notes(interaction: discord.Interaction, sid: int):
         channel, roles = msg_auth(interaction)
@@ -125,7 +125,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='show_user',
-                         description=f'Display all fields for user [{USR_LVL1}]')
+                         description=f'Display all fields for user <sid>[{USR_LVL1}]')
     @app_commands.describe(sid='The SID of the user')
     async def show_user(interaction: discord.Interaction, sid: int):
         channel, roles = msg_auth(interaction)
@@ -223,7 +223,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=False)
 
     @client.tree.command(name='show_password',
-                         description=f'Show your password (your eyes only) [{USR_LVL2}]')
+                         description=f'Display your Run8 server password in a message only you can see')
     async def show_password(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         successful_cmd = False
@@ -239,7 +239,7 @@ def run_new_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)
 
     @client.tree.command(name='refresh_pass',
-                         description=f"Refresh user's password (your eyes only) [{USR_LVL2}]")
+                         description=f'Refresh your Run8 server password and display in a message only you can see')
     async def refresh_pass(interaction: discord.Interaction):
         channel, roles = msg_auth(interaction)
         successful_cmd = False
