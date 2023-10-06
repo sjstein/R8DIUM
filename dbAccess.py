@@ -104,22 +104,29 @@ def merge_security_file(ldb):
                               password, sid, ldb)
         if new_sid != -1:  # Found xml password in database
             current_uid = get_element(new_sid, sid, uid, ldb)
-            new_r8name = ''
+            # When run8 devs finally decide to capture the name, uncomment below
+            # new_r8name = ''
             new_uid = ''
             if current_uid == '' or current_uid.lower() == 'none':  # No UID in database, so populate with XML version
                 try:
                     new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
-                    new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
+                    # When run8 devs finally decide to capture the name, uncomment below
+                    # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
                     update_flag = True
-                    retstr += f'added UID[{new_uid}] and R8_name [{new_r8name}] ' \
+                    # When run8 devs finally decide to capture the name, uncomment below and remove following line
+                    # retstr += f'added UID[{new_uid}] and R8_name [{new_r8name}] ' \
+                    #           f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
+                    retstr += f'added UID[{new_uid}] ' \
                               f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
+
                 except KeyError:
                     retstr += f'Found password but no UID (in XML) for ' \
                               f'SID[{new_sid}]\n'
             else:   # UID found in XML
                 try:
                     new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
-                    new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
+                    # When run8 devs finally decide to capture the name, uncomment below
+                    # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
                     if new_uid != current_uid:
                         # db and xml do not match, what to do? Just notify user for now
                         # Maybe we should start keeping a list of these UIDs? (ala Notes)
@@ -133,7 +140,8 @@ def merge_security_file(ldb):
                 except KeyError:
                     retstr += f'Found password but no UID (in XML) for SID {new_sid}'
             if update_flag:
-                set_element(new_sid, sid, run8_name, new_r8name, ldb)  # Updating this for no real reason atm
+                # When run8 devs finally decide to capture the name, uncomment below
+                # set_element(new_sid, sid, run8_name, new_r8name, ldb)  # Updating this for no real reason atm
                 set_element(new_sid, sid, uid, new_uid, ldb)
                 save_db(DB_FILENAME, ldb)
         else:
