@@ -18,7 +18,7 @@ def scan_ban(ldb):
 
 if __name__ == '__main__':
     userDb = dbAccess.load_db(DB_FILENAME)
-    tid = threading.Thread(target=scan_ban, args=(userDb,))
-    print(f'Firing off scan_ban; thread id {tid}')
-    tid.start()
+    #tid = threading.Thread(target=scan_ban, args=(userDb,))
+    #print(f'Firing off scan_ban; thread id {tid}')
+    #tid.start()
     botHandler.run_new_discord_bot(userDb)

@@ -1,8 +1,9 @@
 import discord
-
+from discord.ext import commands, tasks
+import asyncio
 import dbAccess
 import msgHandler
-from r8udbBotInclude import TOKEN, DB_FILENAME
+from r8udbBotInclude import TOKEN, BAN_SCAN_TIME
 from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_USER, CH_ADMIN, BOT_ROLES, CH_LOG
 
 
@@ -47,6 +48,22 @@ def run_new_discord_bot(ldb):
             print(f'Registered {len(command_list)} command(s)')
         except Exception as e:
             print(e)
+
+        print(f'Starting banned user periodic checks')
+        scan_banned_users.start(ldb)
+
+    @tasks.loop(seconds=int(BAN_SCAN_TIME))
+    async def scan_banned_users(ldb):
+        # Figure out how to determine channel id from name without having interaction object?
+        channel_id = discord.utils.get(client.get_all_channels(), name='cmd_log').id
+        channel = client.get_channel(channel_id)
+        for record in ldb:
+            if record[dbAccess.banned] == 'True':
+                if not msgHandler.check_ban_status(record[dbAccess.sid], ldb):
+                    msgHandler.unban_user(record[dbAccess.sid], 'Automated check', ldb)
+                    print(f'scan_ban just unbanned: {record[dbAccess.sid]}')
+                    await channel.send(f'**Automated scan** unbanned: [{record[dbAccess.sid]}] '
+                                       f'{record[dbAccess.discord_name]}')
 
     @client.tree.command(name='bot_commands', description=f'Show all commands available [{USR_LVL1}]')
     async def bot_commands(interaction: discord.Interaction):
