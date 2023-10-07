@@ -25,6 +25,8 @@ CH_ADMIN = config['discord']['ch_0']
 CH_USER = config['discord']['ch_1']
 CH_LOG = config['discord']['ch_log']
 
+BAN_SCAN_TIME = config['discord']['ban_scan_time']
+
 # Run 8 security configuration xml filename
 SECURITY_FILE = config['run8']['security_file']
 
