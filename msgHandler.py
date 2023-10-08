@@ -22,6 +22,7 @@ def generate_password(length=20,
         chars += string.digits
     if special:
         chars += string.punctuation
+        # Strip out XML special characters
         for c in xml_chars:
             try:
                 chars.remove(c)
@@ -29,10 +30,6 @@ def generate_password(length=20,
                 continue
     pw = random.choices(chars, k=length)
     return ''.join(pw)
-
-
-def days_elapsed(d1: datetime.date, d2: datetime.date) -> int:
-    return (d1-d2).days
 
 
 def check_ban_status(sid, ldb):
@@ -60,6 +57,7 @@ def write_field(sid, field_name, write_val, ldb):
         return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
     if int(dbAccess.set_element(sid, dbAccess.sid, field_name, write_val, ldb)) > 0:
         dbAccess.save_db(DB_FILENAME, ldb)
+        dbAccess.write_security_file(ldb)
         if write_val == '':
             return '<null>'
         return write_val
@@ -77,6 +75,7 @@ def add_user(discord_id, discord_name, ldb):
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
     return f'{discord_name} (SID: {new_sid}) added on {join_date}, pass: {new_pass}'
 
 
@@ -86,6 +85,7 @@ def delete_user(sid, ldb):
     if dbAccess.del_user(sid, ldb) < 0:
         return f'[r8udbBot: UNK ERROR] in delete user routine'
     dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
     return f'User sid: {sid} deleted'
 
 
@@ -113,6 +113,7 @@ def ban_user(sid, duration, reason, ldb):
     dbAccess.set_element(sid, dbAccess.sid, dbAccess.password, generate_password(random.randint(15, 25)), ldb)
     add_note(sid, f'Banned ({ban_date}) for {duration} days - {reason}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
     return (f'User "{dbAccess.get_element(sid,dbAccess.sid,dbAccess.discord_name, ldb)}" '
             f'[SID: {sid}]) **Banned** and password changed')
 
@@ -126,6 +127,7 @@ def unban_user(sid, admin_name, ldb):
     dbAccess.set_element(sid, dbAccess.sid, dbAccess.ban_duration, '', ldb)
     add_note(sid, f'UNbanned ({current_date}) by {admin_name}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
     return (f'User "{dbAccess.get_element(sid,dbAccess.sid,dbAccess.discord_name, ldb)}" '
             f'[SID: {sid}]) **Unbanned**')
 
@@ -176,13 +178,16 @@ def new_pass(discord_id, ldb):
     new_pw = generate_password(random.randint(15, 25))
     dbAccess.set_element(discord_id,dbAccess.discord_id, dbAccess.password, new_pw, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
     return f'new password = {new_pw}'
 
 
-
 if __name__ == '__main__':
-    for test in range(0, 20):
-        print(f'{test} : {generate_password()}')
+    # For localized testing
+
+    # for test in range(0, 20):
+    #     print(f'{test} : {generate_password()}')
 
     # localDb = dbAccess.load_db(DB_FILENAME)
     # print(check_ban_status(38, localDb))
+    pass
