@@ -61,7 +61,10 @@ def save_db(filename: str, ldb: list) -> int:
     return len(ldb)
 
 
-def write_security_file(ldb):
+def write_security_file(ldb: list):
+    # First we merge in the Run8 XML security file to capture any changes before overwriting
+    merge_security_file(ldb)
+
     xml_dict = \
         {XML_ROOT_NAME: {XML_BANNED_CATEGORY_NAME: {XML_BANNED_NAME: []},
                          XML_UNIQUE_CATEGORY_NAME: {XML_UNIQUE_NAME: []}}}
@@ -76,9 +79,7 @@ def write_security_file(ldb):
             usr_list.append({XML_NAME: record[run8_name],
                              XML_UID: record[uid],
                              XML_PASSWORD: record[password]})
-
     xml_out = xmltodict.unparse(xml_dict, pretty=True)
-    print(xml_out)
 
     wp = open(SECURITY_FILE, 'w')
     wp.write(xml_out)
@@ -86,7 +87,7 @@ def write_security_file(ldb):
     return 'file written'
 
 
-def merge_security_file(ldb):
+def merge_security_file(ldb: list):
     # Read current HostSecurity file and update UID fields based on password (gross)
     fp = open(SECURITY_FILE, 'r')
     xml_in = xmltodict.parse(fp.read(), process_namespaces=True)
@@ -151,7 +152,7 @@ def merge_security_file(ldb):
     return retstr
 
 
-def get_index(search_string, search_col: str, ldb: list):
+def get_index(key, search_col: str, ldb: list):
     """
     Return index of record keyed off of <search_string> contained in column <search_col>
     returns (-1) if string not found or invalid column name is specified.
@@ -160,7 +161,7 @@ def get_index(search_string, search_col: str, ldb: list):
     index = 0
     try:
         for line in ldb:
-            if line[str(search_col)] == str(search_string):
+            if line[str(search_col)] == str(key):
                 return index
             index += 1
         return -1
@@ -170,7 +171,7 @@ def get_index(search_string, search_col: str, ldb: list):
         return -1
 
 
-def get_element(search_string, search_col: str, return_col: str, ldb: list):
+def get_element(key, search_col: str, return_col: str, ldb: list):
     """
     Return value in return_col column keyed off of <search_string> contained in column <search_col>
     returns (-1) if string not found or invalid column name is specified.
@@ -178,7 +179,7 @@ def get_element(search_string, search_col: str, return_col: str, ldb: list):
     """
     try:
         for line in ldb:
-            if line[str(search_col)] == str(search_string):
+            if line[str(search_col)] == str(key):
                 return line[str(return_col)]
         return -1
 
@@ -187,16 +188,16 @@ def get_element(search_string, search_col: str, return_col: str, ldb: list):
         return -1
 
 
-def set_element(search_string: str, search_col: str, set_col: str, set_val, ldb: list):
+def set_element(key, search_col: str, set_col: str, set_val, ldb: list):
     """
-    Set the value <set_val> to column <set_col> of the row found with <search_col> == <search_string>
+    Set the value <set_val> to column <set_col> of the row found with <search_col> == <key>
     returns sid of record which has been modified
     returns (-1) if no record found
     NOTE: Will hit on first match if multiples exist
     """
     try:
         for line in ldb:
-            if line[str(search_col)] == str(search_string):
+            if line[str(search_col)] == str(key):
                 line[str(set_col)] = str(set_val)
                 return line[sid]
         return -1
@@ -222,7 +223,7 @@ def add_new_user(name: str, user_name, ldb: list):
     return new_sid
 
 
-def del_user(search_sid, ldb):
+def del_user(search_sid, ldb: list):
     # Find index in ldb corresponding to sid and remove
     index = get_index(str(search_sid), sid, ldb)
     if index < 0:
@@ -244,10 +245,12 @@ def next_avail_sid(ldb: list):
 
 
 if __name__ == '__main__':
-    localDb = load_db(DB_FILENAME)
-    print(merge_security_file(localDb))
-    # write_security_file(localDb)
+    # For localized testing
 
+    # localDb = load_db(DB_FILENAME)
+    # print(merge_security_file(localDb))
+    # write_security_file(localDb)
+    #
     # for l in localDb:
     #     print(l)
     #     print(f'sid:{l[sid]}')
@@ -262,3 +265,4 @@ if __name__ == '__main__':
     # print(f'Setting new run_8 name at sid: {set_element("Sinistar", discord_name, run8_name, "New_run8_name", localDb)}')
     # print(f'Search for sid 38: {get_element(38, sid, discord_name, localDb)}')
     # print(f'Added new user at sid: {add_new_user("Mr New User", localDb)}')
+    pass

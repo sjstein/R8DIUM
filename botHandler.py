@@ -34,7 +34,7 @@ def log_message(interaction) -> str:
     return log_msg
 
 
-def run_new_discord_bot(ldb):
+def run_discord_bot(ldb):
     from discord import app_commands
     from discord.ext import commands
 
@@ -54,7 +54,6 @@ def run_new_discord_bot(ldb):
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(ldb):
-        # Figure out how to determine channel id from name without having interaction object?
         channel_id = discord.utils.get(client.get_all_channels(), name='cmd_log').id
         channel = client.get_channel(channel_id)
         for record in ldb:
@@ -332,40 +331,40 @@ def run_new_discord_bot(ldb):
             await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=False)
 
-    @client.tree.command(name='security_write',
-                         description=f'write the host security file [{USR_LVL0}]')
-    async def security_write(interaction: discord.Interaction):
-        channel, roles = msg_auth(interaction)
-        successful_cmd = False
-        if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
-            if channel == CH_ADMIN:
-                successful_cmd = True
-                response = dbAccess.write_security_file(ldb)
-            else:
-                response = '[r8udbBot: Permissions error] Wrong channel for command'
-        else:
-            response = '[r8udbBot: Permissions error] Invalid user role for command'
-        if successful_cmd and CH_LOG != 'none':
-            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
-            await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
-
-    @client.tree.command(name='security_merge',
-                         description=f'merge security file into database [{USR_LVL0}]')
-    async def security_merge(interaction: discord.Interaction):
-        channel, roles = msg_auth(interaction)
-        successful_cmd = False
-        if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
-            if channel == CH_ADMIN:
-                successful_cmd = True
-                response = dbAccess.merge_security_file(ldb)
-            else:
-                response = '[r8udbBot: Permissions error] Wrong channel for command'
-        else:
-            response = '[r8udbBot: Permissions error] Invalid user role for command'
-        if successful_cmd and CH_LOG != 'none':
-            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
-            await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+    # @client.tree.command(name='security_write',
+    #                      description=f'write the host security file [{USR_LVL0}]')
+    # async def security_write(interaction: discord.Interaction):
+    #     channel, roles = msg_auth(interaction)
+    #     successful_cmd = False
+    #     if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
+    #         if channel == CH_ADMIN:
+    #             successful_cmd = True
+    #             response = dbAccess.write_security_file(ldb)
+    #         else:
+    #             response = '[r8udbBot: Permissions error] Wrong channel for command'
+    #     else:
+    #         response = '[r8udbBot: Permissions error] Invalid user role for command'
+    #     if successful_cmd and CH_LOG != 'none':
+    #         log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+    #         await log_channel.send(log_message(interaction))
+    #     await interaction.response.send_message(response, ephemeral=False)
+    #
+    # @client.tree.command(name='security_merge',
+    #                      description=f'merge security file into database [{USR_LVL0}]')
+    # async def security_merge(interaction: discord.Interaction):
+    #     channel, roles = msg_auth(interaction)
+    #     successful_cmd = False
+    #     if user_level(roles) <= BOT_ROLES.index(USR_LVL0):
+    #         if channel == CH_ADMIN:
+    #             successful_cmd = True
+    #             response = dbAccess.merge_security_file(ldb)
+    #         else:
+    #             response = '[r8udbBot: Permissions error] Wrong channel for command'
+    #     else:
+    #         response = '[r8udbBot: Permissions error] Invalid user role for command'
+    #     if successful_cmd and CH_LOG != 'none':
+    #         log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
+    #         await log_channel.send(log_message(interaction))
+    #     await interaction.response.send_message(response, ephemeral=False)
 
     client.run(TOKEN)
