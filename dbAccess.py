@@ -195,6 +195,8 @@ def set_element(key, search_col: str, set_col: str, set_val, ldb: list):
     returns (-1) if no record found
     NOTE: Will hit on first match if multiples exist
     """
+    if set_val is None:
+        set_val = ''
     try:
         for line in ldb:
             if line[str(search_col)] == str(key):
