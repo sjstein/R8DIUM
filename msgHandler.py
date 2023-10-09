@@ -2,7 +2,7 @@ import datetime
 import random
 import string
 import dbAccess
-from r8udbBotInclude import DB_FILENAME
+from r8udbBotInclude import DB_FILENAME, LOG_FILENAME
 
 
 
@@ -30,6 +30,14 @@ def generate_password(length=20,
                 continue
     pw = random.choices(chars, k=length)
     return ''.join(pw)
+
+
+def write_log_file(msg):
+    fp = open(LOG_FILENAME, 'a')
+    datestr = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    fp.write(f'[{datestr}] {msg}\n')
+    fp.close()
+    return
 
 
 def check_ban_status(sid, ldb):
@@ -176,9 +184,15 @@ def new_pass(discord_id, ldb):
     if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.banned, ldb) == 'True':
         return f'You are currently banned'  # Don't let banned users see their password
     new_pw = generate_password(random.randint(15, 25))
-    dbAccess.set_element(discord_id,dbAccess.discord_id, dbAccess.password, new_pw, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password, new_pw, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.uid, None, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
+    # Writing to log file here in order to back-track any nefarious password sharing
+    # NOTE: Definitely not very secure storing the password in cleartext, but welcome to the jungle
+    write_log_file(f'PASSWORD (RE)SET REQUEST: discord_id [{discord_id}], discord_name ['
+                  f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}] '
+                  f'{new_pw}')
     return f'new password = {new_pw}'
 
 

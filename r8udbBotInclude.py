@@ -7,7 +7,9 @@ config.read(CONFIG_FILE)
 
 # Local configuration options
 USER_DB = config['local']['db_name']
+LOG_FILE = config['local']['log_file']
 DB_FILENAME = USER_DB + '.csv'
+LOG_FILENAME = LOG_FILE + '.log'
 
 # Discord bot unique token
 TOKEN = config['discord']['bot_token']

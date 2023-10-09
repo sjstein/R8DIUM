@@ -1,17 +1,17 @@
 import discord
-from discord.ext import commands, tasks
-import asyncio
+from discord.ext import commands, tasks   # noqa
+import asyncio    # noqa
 import dbAccess
 import msgHandler
 from r8udbBotInclude import TOKEN, BAN_SCAN_TIME
-from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_USER, CH_ADMIN, BOT_ROLES, CH_LOG
+from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_ADMIN, BOT_ROLES, CH_LOG
 
 
 def msg_auth(interaction):
     channel = str(interaction.channel)
-    rolelist = [role.name for role in interaction.user.roles]
-    rolelist.remove('@everyone')
-    return channel, rolelist
+    role_list = [role.name for role in interaction.user.roles]
+    role_list.remove('@everyone')
+    return channel, role_list
 
 
 def user_level(roles):
@@ -31,6 +31,7 @@ def log_message(interaction) -> str:
             log_msg += f'{parm["value"]} '
         log_msg = log_msg[:-1]
     log_msg += f'` in channel: *{interaction.channel}*'
+    msgHandler.write_log_file(log_msg)  # Write the same message to our local log file
     return log_msg
 
 
@@ -43,13 +44,16 @@ def run_discord_bot(ldb):
     @client.event
     async def on_ready():
         print(f'{client.user} is now running')
+        msgHandler.write_log_file(f'------------------')
+        msgHandler.write_log_file(f'{client.user} is now running')
         try:
             command_list = await client.tree.sync()
             print(f'Registered {len(command_list)} command(s)')
+            msgHandler.write_log_file(f'Registered {len(command_list)} command(s)')
         except Exception as e:
             print(e)
-
         print(f'Starting banned user periodic checks')
+        msgHandler.write_log_file(f'Starting banned user periodic checks')
         scan_banned_users.start(ldb)
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
@@ -82,7 +86,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='list_users', description=f'List all users in database [{USR_LVL1}]')
     async def list_users(interaction: discord.Interaction):
@@ -99,7 +103,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='read_notes',
                          description=f'Display all notes for user <sid>[{USR_LVL1}]')
@@ -118,7 +122,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='write_note',
                          description=f'write note about <sid> [{USR_LVL1}]')
@@ -138,7 +142,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='show_user',
                          description=f'Display all fields for user <sid>[{USR_LVL1}]')
@@ -157,7 +161,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='add_user',
                          description=f'Add a new user <discord_id> [{USR_LVL1}]')
@@ -177,7 +181,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='del_user',
                          description=f'Delete user <sid> [{USR_LVL1}]')
@@ -196,7 +200,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='ban_user',
                          description=f'ban user <sid> <duration(days)> <reason(string)> [{USR_LVL1}]')
@@ -217,7 +221,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='unban_user',
                          description=f'unban user <sid> [{USR_LVL1}]')
@@ -236,7 +240,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='show_password',
                          description=f'Display your Run8 server password in a message only you can see')
@@ -252,7 +256,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='refresh_pass',
                          description=f'Refresh your Run8 server password and display in a message only you can see')
@@ -268,7 +272,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='generate_pass',
                          description=f'Generate a new password for user <sid> [{USR_LVL1}]')
@@ -288,7 +292,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='arb_read',
                          description=f'read value of field <field> of user <sid> [{USR_LVL1}]')
@@ -308,7 +312,7 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
     @client.tree.command(name='arb_write',
                          description=f'write value <val> to field <field> of user <sid> [{USR_LVL0}]')
@@ -329,8 +333,11 @@ def run_discord_bot(ldb):
         if successful_cmd and CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
             await log_channel.send(log_message(interaction))
-        await interaction.response.send_message(response, ephemeral=False)
+        await interaction.response.send_message(response, ephemeral=False)  # noqa
 
+    # The following block of code was removed after auto-updates to the HostSecurity file was added
+    #  However, I left in for the possible future situation where this functionality is desired.
+    #
     # @client.tree.command(name='security_write',
     #                      description=f'write the host security file [{USR_LVL0}]')
     # async def security_write(interaction: discord.Interaction):
