@@ -126,9 +126,6 @@ def run_discord_bot(ldb):
             response = '* ' + msgHandler.show_notes(sid, ldb).replace('|', '\n* ')
         else:
             response = permission
-        if successful_cmd and CH_LOG != 'none':
-            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
-            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='write_note',
@@ -201,7 +198,6 @@ def run_discord_bot(ldb):
             response = msgHandler.delete_user(sid, ldb)
         else:
             response = permission
-            await log_channel.send(log_message(interaction))
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='ban_user',
