@@ -45,20 +45,34 @@ db_field_list = [sid,
 
 def load_db(filename: str) -> list:
     ldb = list()
-    with open(filename, newline='') as csvfile:
-        input_file = csv.DictReader(csvfile)
-        for row in input_file:
-            ldb.append(row)
-    return ldb
+    try:
+        with open(filename, newline='') as csvfile:
+            input_file = csv.DictReader(csvfile)
+            for row in input_file:
+                ldb.append(row)
+        return ldb
+
+    except FileNotFoundError as e:
+        print(f'\nr8udbBot ({__name__}.py): FATAL exception -> {e}')
+        exit(-1)
+
+    except Exception as e:
+        print(f'\nr8udbBot ({__name__}.py: FATAL exception in load_db, type unknown - contact devs')
+        exit(-1)
 
 
 def save_db(filename: str, ldb: list) -> int:
-    with open(filename, 'w', newline='') as csvfile:
-        csvwriter = csv.DictWriter(csvfile, fieldnames=db_field_list)
-        csvwriter.writeheader()
-        for row in ldb:
-            csvwriter.writerow(row)
-    return len(ldb)
+    try:
+        with open(filename, 'w', newline='') as csvfile:
+            csvwriter = csv.DictWriter(csvfile, fieldnames=db_field_list)
+            csvwriter.writeheader()
+            for row in ldb:
+                csvwriter.writerow(row)
+        return len(ldb)
+
+    except Exception as e:
+        print(f'\nr8udbBot ({__name__}.py: FATAL exception in save_db, type unknown - contact devs')
+        exit(-1)
 
 
 def write_security_file(ldb: list):
@@ -81,17 +95,32 @@ def write_security_file(ldb: list):
                              XML_PASSWORD: record[password]})
     xml_out = xmltodict.unparse(xml_dict, pretty=True)
 
-    wp = open(SECURITY_FILE, 'w')
-    wp.write(xml_out)
-    wp.close()
-    return 'file written'
+    try:
+        wp = open(SECURITY_FILE, 'w')
+        wp.write(xml_out)
+        wp.close()
+        return 'file written'
+
+    except Exception as e:
+        print(f'\nr8udbBot ({__name__}.py: FATAL exception in write_security_file, type unknown - contact devs')
+        exit(-1)
 
 
 def merge_security_file(ldb: list):
-    # Read current HostSecurity file and update UID fields based on password (gross)
-    fp = open(SECURITY_FILE, 'r')
-    xml_in = xmltodict.parse(fp.read(), process_namespaces=True)
-    fp.close()
+    try:
+        # Read current HostSecurity file and update UID fields based on password (gross)
+        fp = open(SECURITY_FILE, 'r')
+        xml_in = xmltodict.parse(fp.read(), process_namespaces=True)
+        fp.close()
+
+    except FileNotFoundError as e:
+        print(f'\nr8udbBot ({__name__}.py): FATAL exception -> {e}')
+        exit(-1)
+
+    except Exception as e:
+        print(f'\nr8udbBot ({__name__}.py: FATAL exception in merge_security_file, type unknown - contact devs')
+        exit(-1)
+
     update_flag = False
     retstr = '`Merge results:\n-------------\n'
 
@@ -247,24 +276,4 @@ def next_avail_sid(ldb: list):
 
 
 if __name__ == '__main__':
-    # For localized testing
-
-    # localDb = load_db(DB_FILENAME)
-    # print(merge_security_file(localDb))
-    # write_security_file(localDb)
-    #
-    # for l in localDb:
-    #     print(l)
-    #     print(f'sid:{l[sid]}')
-    #
-    # print(f'-----\ndeleting user 5 : {del_user(5, localDb)}')
-    #
-    # for l in localDb:
-    #     print(l)
-    #
-    # print(f'next available sid: {next_avail_sid(localDb)}')
-    # print(f'Search for Sinistar: {get_element("Sinistar", discord_name, run8_name, localDb)}')
-    # print(f'Setting new run_8 name at sid: {set_element("Sinistar", discord_name, run8_name, "New_run8_name", localDb)}')
-    # print(f'Search for sid 38: {get_element(38, sid, discord_name, localDb)}')
-    # print(f'Added new user at sid: {add_new_user("Mr New User", localDb)}')
     pass
