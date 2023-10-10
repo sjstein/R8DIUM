@@ -110,6 +110,14 @@ def add_note(sid, note, ldb):
     return f'Note: "{note}" added to user: {dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_name, ldb)}'
 
 
+def add_role(sid, role, ldb):
+    if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
+        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+    dbAccess.set_element(sid, dbAccess.sid, dbAccess.role, str(role), ldb)
+    dbAccess.save_db(DB_FILENAME, ldb)
+    return f'Role: "{role}" given to user: {dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_name, ldb)}'
+
+
 def ban_user(sid, duration, reason, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
         return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
@@ -197,11 +205,4 @@ def new_pass(discord_id, ldb):
 
 
 if __name__ == '__main__':
-    # For localized testing
-
-    # for test in range(0, 20):
-    #     print(f'{test} : {generate_password()}')
-
-    # localDb = dbAccess.load_db(DB_FILENAME)
-    # print(check_ban_status(38, localDb))
     pass
