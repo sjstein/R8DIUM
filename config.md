@@ -94,6 +94,7 @@ If you already have an existing database from a previous installation, just make
 
 When you first add the bot to your server, you need to set some boundaries on which commands can be executed by your members. This is done by selecting Server settings -> Integrations:
 ![alt_text](images/image1.png "image_tooltip")
+---
 
 Then choose “Manage” for your bot:
 ![alt_text](images/image2.png "image_tooltip")
