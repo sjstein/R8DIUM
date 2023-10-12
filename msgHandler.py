@@ -2,17 +2,16 @@ import datetime
 import random
 import string
 import dbAccess
-from r8udbBotInclude import DB_FILENAME, LOG_FILENAME
-
+from r8diumInclude import DB_FILENAME, LOG_FILENAME
 
 
 def generate_password(length=20,
                       lowercase=True,
                       uppercase=True,
                       numbers=True,
-                      special=True):
+                      special=False):
     chars = []
-    xml_chars = ['<', '>', '&', '"', "'"]
+    invalid_chars = ['<', '>', '&', '"', "'", "l", "O"]
 
     if lowercase:
         chars += string.ascii_lowercase
@@ -22,12 +21,12 @@ def generate_password(length=20,
         chars += string.digits
     if special:
         chars += string.punctuation
-        # Strip out XML special characters
-        for c in xml_chars:
-            try:
-                chars.remove(c)
-            except ValueError:
-                continue
+    # Strip out invalid characters
+    for c in invalid_chars:
+        try:
+            chars.remove(c)
+        except ValueError:
+            continue
     pw = random.choices(chars, k=length)
     return ''.join(pw)
 

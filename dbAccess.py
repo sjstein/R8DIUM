@@ -1,7 +1,14 @@
 import csv
-import xmltodict
-from r8udbBotInclude import SECURITY_FILE, DB_FILENAME
+import hashlib
+import requests
+import uuid
 
+import xmltodict
+from r8diumInclude import SECURITY_FILE, DB_FILENAME, SEND_STATS, SOFTWARE_VERSION
+
+STAT_URL = 'http://'
+
+# Below define the tags which Run8 uses inside the security XML
 XML_ROOT_NAME = 'HostSecurityData'
 XML_BANNED_CATEGORY_NAME = 'Banned_Users'
 XML_BANNED_NAME = 'BannedUser'
@@ -11,7 +18,6 @@ XML_NAME = 'Name'
 XML_UID = 'UID'
 XML_IP = 'IP'
 XML_PASSWORD = 'Password'
-
 
 # Field names
 sid = 'sid'  # int (unique)
@@ -75,6 +81,16 @@ def save_db(filename: str, ldb: list) -> int:
         exit(-1)
 
 
+def send_statistics(ldb: list):
+    if SEND_STATS:
+        server_mac_addr = ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)])
+        server_id = hashlib.md5((server_mac_addr + SECURITY_FILE).encode()).hexdigest()
+        put_dict = {'server_id': server_id, 'bot_version': SOFTWARE_VERSION, 'number_of_users': len(ldb)-1}
+        return_val = requests.post(STAT_URL, put_dict)
+        return return_val
+    return
+
+
 def write_security_file(ldb: list):
     # First we merge in the Run8 XML security file to capture any changes before overwriting
     merge_security_file(ldb)
@@ -124,9 +140,13 @@ def merge_security_file(ldb: list):
     update_flag = False
     retstr = '`Merge results:\n-------------\n'
 
+    if type(xml_in[XML_ROOT_NAME]) == dict:
+        # No entries in XML, just return
+        return f'File merge error : No category names found'
+
     if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]) == dict:
-        # Edge case to take of a single entry for XML-UNIQUE_NAME
-        return f'File merge error : only one {XML_UNIQUE_NAME} entry found - add one blank in XML and retry'
+        # Edge case to take of a single entry for XML-UNIQUE_NAME, just return and allow complete rewrite
+        return f'File merge error : only one {XML_UNIQUE_NAME} entry found'
 
     for record in range(0, len(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME])):
         retstr += f'{record : 03d}: '
@@ -276,4 +296,6 @@ def next_avail_sid(ldb: list):
 
 
 if __name__ == '__main__':
+    test = [1, 2, 3]
+    send_statistics(test)
     pass

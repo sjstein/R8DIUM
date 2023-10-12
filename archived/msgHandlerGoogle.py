@@ -5,7 +5,7 @@ import sheetHandler
 import time
 
 from googleapiclient.errors import HttpError
-from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_USER, CH_ADMIN
+from r8diumInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_USER, CH_ADMIN
 
 
 def generate_password(length=20,

@@ -1,8 +1,8 @@
 *.xml
 *.log
 *.json
-*.csv
-r8udbBot.cfg
+r8diumDb.csv
+r8dium.cfg
 venv/
 .idea/
 __pycache__/

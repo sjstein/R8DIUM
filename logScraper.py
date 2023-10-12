@@ -1,4 +1,4 @@
-# Quick code to scrape through log file for usernames, UID and IP# for importing into spreadsheet
+# Quick code to scrape through log file for usernames, UID and IP# for importing into database
 
 infile = 'run8.log'
 outfile = 'userlist.csv'
