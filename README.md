@@ -2,27 +2,28 @@
 
 ## The Run8 Database for Integrated User Management
 
+## See Getting_Started.md for hints on how to use
+
 ### Project files:
 
 * r8dium.py : Entry point
 * r8diumInclude.py : Helper routines / constants
-botHandler.py : Define bot commands and interactions
-msgHandler.py : Middleman between bot, database, and (local) file system
-dbAccess.py   : Database support
-r8dium_example.cfg : Sample configuration file
-r8diumDb-blank.csv : Blank database schema
+* botHandler.py : Define bot commands and interactions
+* msgHandler.py : Middleman between bot, database, and (local) file system
+* dbAccess.py   : Database support
+* r8dium_example.cfg : Sample configuration file
+* r8diumDb-blank.csv : Blank database schema
 
 
 ### Auxillary files:
 
-logScraper.py  : simple hack to scrape through run8 logs looking for user data
+* logScraper.py  : simple hack to scrape through run8 logs looking for user data
 
 
 ### Deprecated files:
 
-archived/msgHandlerGoogle.py  : message handler for working with google sheets
-archived/sheetHandler.py  : database support when using google sheet as database
+* archived/msgHandlerGoogle.py  : message handler for working with google sheets
+* archived/sheetHandler.py  : database support when using google sheet as database
 
 
-## See Getting_Started.md for hints on how to use
 
