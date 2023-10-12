@@ -106,7 +106,7 @@ Then choose “Manage” for your bot:
 
 First, disable all the bot commands for Everyone, and then add the back for your two upper levels roles (the same as specified in the cfg file as lvl0 and lvl1 - here in this example, those roles are named Admin and Assistant. Also make sure your bot can be accessed in all channels (unless you want to restrict) as shown:
 
-![alt_text](images/image1.png "image_tooltip")
+![alt_text](images/image6.png "image_tooltip")
 
 Then configure the two commands we want our users to have access to which are /refresh_password and /show_password (optionally /bot_ping too).
 Click on them each in turn and add exceptions as shown:
@@ -122,7 +122,7 @@ Recall that in this example, the “User” role is the same as usr_lvl2 in the 
 
 After these are added, they will show in  the command list like this:
 
-![alt_text](images/image6.png "image_tooltip")
+![alt_text](images/image1.png "image_tooltip")
 
 
 (Note in this case, the /bot_ping command was also given user access)
