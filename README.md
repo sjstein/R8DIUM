@@ -4,8 +4,8 @@
 
 ### Project files:
 
-r8dium.py : Entry point
-r8diumInclude.py : Helper routines / constants
+* r8dium.py : Entry point
+* r8diumInclude.py : Helper routines / constants
 botHandler.py : Define bot commands and interactions
 msgHandler.py : Middleman between bot, database, and (local) file system
 dbAccess.py   : Database support
@@ -24,5 +24,5 @@ archived/msgHandlerGoogle.py  : message handler for working with google sheets
 archived/sheetHandler.py  : database support when using google sheet as database
 
 
-## See GettingStarted for hints on how to use
+## See Getting_Started.md for hints on how to use
 
