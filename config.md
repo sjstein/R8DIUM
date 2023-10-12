@@ -104,12 +104,13 @@ Then choose “Manage” for your bot:
 First, disable all the bot commands for Everyone, and then add the back for your two upper levels roles (the same as specified in the cfg file as lvl0 and lvl1 - here in this example, those roles are named Admin and Assistant. Also make sure your bot can be accessed in all channels (unless you want to restrict) as shown:
 ![alt_text](images/image3.png "image_tooltip")
 
-Then configure the two commands we want our users to have access to which are /refresh_password and /show_password (optionally /bot_ping too). Click on them each in turn and add exceptions as shown:
+Then configure the two commands we want our users to have access to which are /refresh_password and /show_password (optionally /bot_ping too).
+Click on them each in turn and add exceptions as shown:
 ![alt_text](images/image4.png "image_tooltip")
-
+-
 
 ![alt_text](images/image5.png "image_tooltip")
-
+-
 
 Recall that in this example, the “User” role is the same as usr_lvl2 in the configuration file and is the role that you assign to those Discord server members who have been granted access to the server. They are the only ones who need to have access to the password commands.
 
