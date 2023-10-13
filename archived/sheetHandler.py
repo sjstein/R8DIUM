@@ -7,7 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from r8udbBotInclude import SPREADSHEET_ID, SECURITY_FILE
+from r8diumInclude import SPREADSHEET_ID, SECURITY_FILE
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 COLUMNS = ['SID', 'Discord Name', 'Discord ID', 'Run8 Name', 'UID', 'Role', 'Password',

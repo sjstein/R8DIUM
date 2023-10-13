@@ -1,6 +1,7 @@
 import configparser
 
-CONFIG_FILE = 'r8udbBot.cfg'
+SOFTWARE_VERSION = 'Articulated'
+CONFIG_FILE = 'r8dium.cfg'
 
 config = configparser.ConfigParser()
 if len(config.read(CONFIG_FILE)) == 0:
@@ -11,6 +12,11 @@ try:
     # Local configuration options
     USER_DB = config['local']['db_name']
     LOG_FILE = config['local']['log_file']
+    if config['local']['send_stats'] == 'True':
+        SEND_STATS = True
+    else:
+        SEND_STATS = False
+
     DB_FILENAME = USER_DB + '.csv'
     LOG_FILENAME = LOG_FILE + '.log'
 
@@ -41,10 +47,10 @@ try:
     SECURITY_FILE = config['run8']['security_file']
 
 except KeyError as e:
-    print(f'\nr8udbBot ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
+    print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
     exit(-1)
 
 except Exception as e:
-    print(f'\nr8udbBot ({__name__}.py: FATAL exception type unknown - contact devs')
+    print(f'\nr8dium ({__name__}.py: FATAL exception type unknown - contact devs')
     exit(-1)
 

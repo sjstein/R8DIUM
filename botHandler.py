@@ -3,8 +3,8 @@ from discord.ext import commands, tasks   # noqa
 import asyncio    # noqa
 import dbAccess
 import msgHandler
-from r8udbBotInclude import TOKEN, BAN_SCAN_TIME
-from r8udbBotInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_ADMIN, BOT_ROLES, CH_LOG, CH_RQD
+from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION
+from r8diumInclude import USR_LVL0, USR_LVL1, USR_LVL2, CH_ADMIN, BOT_ROLES, CH_LOG, CH_RQD
 
 
 def msg_auth(interaction):
@@ -45,13 +45,13 @@ def check_permissions(interaction, channel_restriction, valid_ch, valid_user):
             if channel == valid_ch:
                 return 'Ok'
             else:
-                return '[r8udbBot: Permissions error] Wrong channel for command'
+                return '[R8DIUM: Permissions error] Wrong channel for command'
         else:
-            return 'r8udbBot: Permissions error] Invalid user role for command'
+            return 'R8DIUM: Permissions error] Invalid user role for command'
     elif user_level(roles) <= BOT_ROLES.index(valid_user):
         return 'Ok'
     else:
-        return 'r8udbBot: Permissions error] Invalid user role for command'
+        return 'R8DIUM: Permissions error] Invalid user role for command'
 
 
 def run_discord_bot(ldb):
@@ -62,9 +62,11 @@ def run_discord_bot(ldb):
 
     @client.event
     async def on_ready():
-        print(f'{client.user} is now running')
+        print(f'R8DIUM [{SOFTWARE_VERSION}] starting')
+        print(f'Discord bot [{client.user}] is now running')
         msgHandler.write_log_file(f'------------------')
-        msgHandler.write_log_file(f'{client.user} is now running')
+        msgHandler.write_log_file(f'R8DIUM [{SOFTWARE_VERSION}] starting')
+        msgHandler.write_log_file(f'Discord bot [{client.user}] is now running')
         try:
             command_list = await client.tree.sync()
             print(f'Registered {len(command_list)} command(s)')
@@ -77,6 +79,8 @@ def run_discord_bot(ldb):
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(ldb):
+        if type(ldb) != list:   # ldb must be empty - showing as NoneType
+            return
         channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
         channel = client.get_channel(channel_id)
         for record in ldb:
@@ -168,6 +172,7 @@ def run_discord_bot(ldb):
                 await log_channel.send(log_message(interaction))
             discord_name = await client.fetch_user(int(discord_id[2:-1]))
             response = msgHandler.add_user(discord_id, discord_name, ldb)
+            dbAccess.send_statistics(ldb)       # Send usage data
         else:
             response = permission
         await interaction.response.send_message(response, ephemeral=True)  # noqa
@@ -196,6 +201,7 @@ def run_discord_bot(ldb):
                 log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
                 await log_channel.send(log_message(interaction))
             response = msgHandler.delete_user(sid, ldb)
+            dbAccess.send_statistics(ldb)       # Send usage data
         else:
             response = permission
         await interaction.response.send_message(response, ephemeral=True)  # noqa
@@ -313,6 +319,20 @@ def run_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
 
+    @client.tree.command(name='ping_bot',
+                         description=f'Refresh your Run8 server password and display in a message only you can see')
+    async def ping_bot(interaction: discord.Interaction):
+        channel, roles = msg_auth(interaction)
+        user_id = str(interaction.user.id)
+        if user_level(roles) <= BOT_ROLES.index(USR_LVL2):
+            if CH_LOG != 'none':
+                log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+                await log_channel.send(log_message(interaction))
+            response = 'R8DIUM says "Pong!"'
+        else:
+            return
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
+
     # The following block of code was removed after auto-updates to the HostSecurity file was added
     #  However, I left in for the possible future situation where this functionality is desired.
     #
@@ -326,9 +346,9 @@ def run_discord_bot(ldb):
     #             successful_cmd = True
     #             response = dbAccess.write_security_file(ldb)
     #         else:
-    #             response = '[r8udbBot: Permissions error] Wrong channel for command'
+    #             response = '[R8DIUM: Permissions error] Wrong channel for command'
     #     else:
-    #         response = '[r8udbBot: Permissions error] Invalid user role for command'
+    #         response = '[R8DIUM: Permissions error] Invalid user role for command'
     #     if successful_cmd and CH_LOG != 'none':
     #         log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
     #         await log_channel.send(log_message(interaction))
@@ -344,9 +364,9 @@ def run_discord_bot(ldb):
     #             successful_cmd = True
     #             response = dbAccess.merge_security_file(ldb)
     #         else:
-    #             response = '[r8udbBot: Permissions error] Wrong channel for command'
+    #             response = '[R8DIUM: Permissions error] Wrong channel for command'
     #     else:
-    #         response = '[r8udbBot: Permissions error] Invalid user role for command'
+    #         response = '[R8DIUM: Permissions error] Invalid user role for command'
     #     if successful_cmd and CH_LOG != 'none':
     #         log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
     #         await log_channel.send(log_message(interaction))
