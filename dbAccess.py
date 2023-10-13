@@ -59,11 +59,14 @@ def load_db(filename: str) -> list:
         return ldb
 
     except FileNotFoundError as e:
-        print(f'\nr8udbBot ({__name__}.py): FATAL exception -> {e}')
-        exit(-1)
+        print(f'\nr8dium: Databse file {filename} not found, creating a new one')
+        with open(filename, 'w', newline='') as csvfile:
+            csvwriter = csv.DictWriter(csvfile, fieldnames=db_field_list)
+            csvwriter.writeheader()
+        return load_db(filename)
 
     except Exception as e:
-        print(f'\nr8udbBot ({__name__}.py: FATAL exception in load_db, type unknown - contact devs')
+        print(f'\nr8dium ({__name__}.py: FATAL exception in load_db, type unknown - contact devs')
         exit(-1)
 
 
@@ -77,7 +80,7 @@ def save_db(filename: str, ldb: list) -> int:
         return len(ldb)
 
     except Exception as e:
-        print(f'\nr8udbBot ({__name__}.py: FATAL exception in save_db, type unknown - contact devs')
+        print(f'\nr8dium ({__name__}.py: FATAL exception in save_db, type unknown - contact devs')
         exit(-1)
 
 
@@ -118,7 +121,7 @@ def write_security_file(ldb: list):
         return 'file written'
 
     except Exception as e:
-        print(f'\nr8udbBot ({__name__}.py: FATAL exception in write_security_file, type unknown - contact devs')
+        print(f'\nr8dium ({__name__}.py: FATAL exception in write_security_file, type unknown - contact devs')
         exit(-1)
 
 
@@ -130,11 +133,11 @@ def merge_security_file(ldb: list):
         fp.close()
 
     except FileNotFoundError as e:
-        print(f'\nr8udbBot ({__name__}.py): FATAL exception -> {e}')
+        print(f'\nr8dium ({__name__}.py): FATAL exception -> {e}')
         exit(-1)
 
     except Exception as e:
-        print(f'\nr8udbBot ({__name__}.py: FATAL exception in merge_security_file, type unknown - contact devs')
+        print(f'\nr8dium ({__name__}.py: FATAL exception in merge_security_file, type unknown - contact devs')
         exit(-1)
 
     update_flag = False

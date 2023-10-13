@@ -47,10 +47,10 @@ try:
     SECURITY_FILE = config['run8']['security_file']
 
 except KeyError as e:
-    print(f'\nr8udbBot ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
+    print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
     exit(-1)
 
 except Exception as e:
-    print(f'\nr8udbBot ({__name__}.py: FATAL exception type unknown - contact devs')
+    print(f'\nr8dium ({__name__}.py: FATAL exception type unknown - contact devs')
     exit(-1)
 

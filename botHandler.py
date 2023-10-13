@@ -45,13 +45,13 @@ def check_permissions(interaction, channel_restriction, valid_ch, valid_user):
             if channel == valid_ch:
                 return 'Ok'
             else:
-                return '[r8udbBot: Permissions error] Wrong channel for command'
+                return '[R8DIUM: Permissions error] Wrong channel for command'
         else:
-            return 'r8udbBot: Permissions error] Invalid user role for command'
+            return 'R8DIUM: Permissions error] Invalid user role for command'
     elif user_level(roles) <= BOT_ROLES.index(valid_user):
         return 'Ok'
     else:
-        return 'r8udbBot: Permissions error] Invalid user role for command'
+        return 'R8DIUM: Permissions error] Invalid user role for command'
 
 
 def run_discord_bot(ldb):
@@ -79,6 +79,8 @@ def run_discord_bot(ldb):
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(ldb):
+        if type(ldb) != list:   # ldb must be empty - showing as NoneType
+            return
         channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
         channel = client.get_channel(channel_id)
         for record in ldb:
@@ -326,7 +328,7 @@ def run_discord_bot(ldb):
             if CH_LOG != 'none':
                 log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
                 await log_channel.send(log_message(interaction))
-            response = 'r8udbBot says "Pong!"'
+            response = 'R8DIUM says "Pong!"'
         else:
             return
         await interaction.response.send_message(response, ephemeral=True)  # noqa
@@ -344,9 +346,9 @@ def run_discord_bot(ldb):
     #             successful_cmd = True
     #             response = dbAccess.write_security_file(ldb)
     #         else:
-    #             response = '[r8udbBot: Permissions error] Wrong channel for command'
+    #             response = '[R8DIUM: Permissions error] Wrong channel for command'
     #     else:
-    #         response = '[r8udbBot: Permissions error] Invalid user role for command'
+    #         response = '[R8DIUM: Permissions error] Invalid user role for command'
     #     if successful_cmd and CH_LOG != 'none':
     #         log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
     #         await log_channel.send(log_message(interaction))
@@ -362,9 +364,9 @@ def run_discord_bot(ldb):
     #             successful_cmd = True
     #             response = dbAccess.merge_security_file(ldb)
     #         else:
-    #             response = '[r8udbBot: Permissions error] Wrong channel for command'
+    #             response = '[R8DIUM: Permissions error] Wrong channel for command'
     #     else:
-    #         response = '[r8udbBot: Permissions error] Invalid user role for command'
+    #         response = '[R8DIUM: Permissions error] Invalid user role for command'
     #     if successful_cmd and CH_LOG != 'none':
     #         log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)   # return channel id from name
     #         await log_channel.send(log_message(interaction))
