@@ -1,0 +1,3 @@
+discord >= 2
+requests >= 2
+xmltodict >= 0
