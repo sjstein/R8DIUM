@@ -2,7 +2,33 @@
 
 ## The Run8 Database for Integrated User Management
 
-## See Getting_Started.md for hints on how to use
+## Installing / running using a virtual environment (highly recommended):
+------------
+### To install:
+From the R8DIUM installation directory:
+* Set up a new virtual environment per your local installation / OS within the directory you installed the R8DIUM software
+* Activate your new environment
+* update pip : `python -m pip install --upgrade pip`
+* install packages : `pip install -r requirements.txt`
+
+### To run:
+From the R8DIUM installation directory:
+* Activate virtual environment
+* type: `python r8dium.py`
+------------
+## Installing / running without using a virtual environment (not recommended):
+
+From the R8DIUM installation directory:
+* update pip : `python -m pip install --upgrade pip`
+* install packages : `pip install -r requirements.txt`
+
+### To run:
+From the R8DIUM installation directory:
+* type: `python r8dium.py`
+------------
+### For further info on bot installation and usage, see [Getting_Started.md](Getting_Started.md)
+
+---------
 
 ### Project files:
 
