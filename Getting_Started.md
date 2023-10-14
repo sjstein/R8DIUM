@@ -10,6 +10,10 @@ The configuration file contains import fields which you will need to fill in wit
 [local]
 db_name = r8diumDb
 log_file = r8dium
+
+r8server_addr = run8.server.address
+r8server_port = 00000
+
 # Please consider leaving the following value set to True as it will help us determine future developments
 # Currently the statistics sent are a unique hashed server ID and the number of users your database contains
 send_stats = False
@@ -39,6 +43,11 @@ security_file = HostSecurity.xml
 **<code>db_name</code></strong>is the name of the file (with .csv added) which will contain the database info for your users. Suggest to leave at the default.
 
 **<code>log_file</code></strong>is the name of the file (with .log added) which will track actions the bot performs. Suggest to leave at the default.
+
+**<code>r8server_addr</code></strong>is the ip address of your run8 server. This is used to provide users valid info with the /server_info command.
+
+**<code>r8server_port</code></strong>is the port number of your run8 server. This is used to provide users valid info with the /server_info command.
+
 
 **<code>send_stats</code></strong>should be either <strong>True </strong>or <strong>False</strong>. If set to True, the bot will send a small amount of statistics to the developer (a unique anonymous identifier for your server, and the number of users in the database). It is much appreciated if you leave this set to <strong>True</strong>
 
