@@ -2,7 +2,7 @@
 
 ## The Run8 Database for Integrated User Management
 
-**R8DIUM is a Discord "bot" which allows user management for a Run8 server**. It allows admin/yardmasters the ability to
+**R8DIUM is a Discord "bot" which enables user management for a Run8 server**. It allows admin/yardmasters the ability to
 add and remove users as well as ban and unban them. Furthermore, R8DIUM allows the users themselves to view their
 current password, and request a new one be generated.
 
@@ -71,7 +71,7 @@ From the R8DIUM installation directory:
 * msgHandler.py : Middleman between bot, database, and (local) file system
 * dbAccess.py   : Database support
 * r8dium_example.cfg : Sample configuration file
-* r8diumDb-blank.csv : Blank database schema
+~~* r8diumDb-blank.csv : Blank database schema~~
 
 
 ### Auxillary files:
