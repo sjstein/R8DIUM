@@ -1,7 +1,3 @@
-import botHandler
-import dbAccess
-from r8diumInclude import DB_FILENAME
-
 #########################
 # R8DIUM : Run8 Database for Integrated User Management
 #
@@ -18,6 +14,9 @@ from r8diumInclude import DB_FILENAME
 # You should have received a copy of the GNU General Public License along with R8DIUM.
 # If not, see <https://www.gnu.org/licenses/>.
 ##########################
+import botHandler
+import dbAccess
+from r8diumInclude import DB_FILENAME
 
 if __name__ == '__main__':
     userDb = dbAccess.load_db(DB_FILENAME)
