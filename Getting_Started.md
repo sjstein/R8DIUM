@@ -17,27 +17,18 @@ send_stats = False
 [discord]
 # bot_token is PRIVATE and unique to the particular bot instance
 bot_token = [insert BOT token]
-# user level definitions which correspond to the "roles" defined on the discord server
-# lower numbers have more rights
-usr_lvl0 = Admin
-usr_lvl1 = Assistant
-usr_lvl2 = User
-usr_lvl3 = All
-# Channels for using bots
-ch_0 = server_admin
-ch_1 = user_admin
-# Choose if channel permissions are required (True or False)
-ch_permissions = False
-# Logging channel - set to 'none' to disable logging
-ch_log = admin_log
+# ch_admin is the name of the channel on the Discord server which will be used to notify admins of important info
+ch_admin = server_admin
+# ch_log is the name of the channel on the Discord server which will house the log of all commands sent to
+# the bot. Enter 'None' to disable this feature.
+ch_log = bot_log
 # Number of seconds between scanning database for unbanning users
 ban_scan_time = 60
+
 
 [run8]
 # security_file is the name of the run8 security configuration xml file
 security_file = HostSecurity.xml
-
-
 ---
 ```
 
@@ -45,33 +36,21 @@ security_file = HostSecurity.xml
 
 ### Explanation of configuration fields:
 
-**<code>db_name </code></strong>is the name of the file (with .csv added) which will contain the database info for your users. Suggest to leave at the default.
+**<code>db_name</code></strong>is the name of the file (with .csv added) which will contain the database info for your users. Suggest to leave at the default.
 
-**<code>log_file </code></strong>is the name of the file (with .log added) which will track actions the bot performs. Suggest to leave at the default.
+**<code>log_file</code></strong>is the name of the file (with .log added) which will track actions the bot performs. Suggest to leave at the default.
 
-**<code>send_stats </code></strong>should be either <strong>True </strong>or <strong>False</strong>. If set to True, the bot will send a small amount of statistics to the developer (a unique anonymous identifier for your server, and the number of users in the database). It is much appreciated if you leave this set to <strong>True</strong>
+**<code>send_stats</code></strong>should be either <strong>True </strong>or <strong>False</strong>. If set to True, the bot will send a small amount of statistics to the developer (a unique anonymous identifier for your server, and the number of users in the database). It is much appreciated if you leave this set to <strong>True</strong>
 
-**<code>bot_token </code></strong>is where you will paste your unique Discord bot token acquired from the Discord developer portal.
+**<code>bot_token</code></strong>is where you will paste your unique Discord bot token acquired from the Discord developer portal.
 
-**<code>usr_lvl0 </code></strong>is the name of the role on your server given to the highest authority for use of the bot. Reserve this role for admins as there will be some commands only available to this level.
+**<code>ch_admin</code></strong>is the name of the channel which the bot will use to post important messages for admins to see
 
-**<code>usr_lvl1 </code></strong>is the role intended for the majority of the yardmasters and/or assistant server admin. This role will have access to almost all bot commands including banning and unbanning users.
+**<code>ch_log</code></strong>is the name of the channel which the bot will use to log all command requests sent to it.
 
-**<code>usr_lvl2 </code></strong>is the role for your server members. The only commands this role will have access to are show_password and refresh_password.
+**<code>ban_scan_time</code></strong>is the time (in seconds) between each check for an unbanned user (due to timeout). Suggest leaving at default.
 
-**<code>usr_lvl3 </code></strong>is not currently used - but consider it a catch-all for any other role not outlined above
-
-**<code>ch_0 </code></strong>is the name of the channel which must be used for server commands (if permissions required - see below)
-
-**<code>ch_1 </code></strong>is the name of the channel which must be used for user commands (if permissions required - see below)
-
-**<code>ch_permissions </code></strong>should be either “True” or “False”. If True, command usage is limited to the channels specified above, if False, commands can be issued from any channel.
-
-_NOTE_: <span style="text-decoration:underline;">All</span> responses are sent back as private, so no others can see.
-
-**<code>ban_scan_time </code></strong>is the time (in seconds) between each check for an unbanned user (due to timeout). Suggest leaving at default.
-
-**<code>security_file </code></strong>is the path and filename for the server HostSecurity.xml file. \
+**<code>security_file</code></strong>is the path and filename for the server HostSecurity.xml file. \
 <em>NOTE</em>: Run8 requires this file to be in the /Content directory, not in the same directory as ServerConfig.xml
 
 
@@ -162,6 +141,8 @@ If you made it this far, your system *should* be running!
 
 
 ## Using the bot
+
+_NOTE_: <span style="text-decoration:underline;">All</span> responses to commands are sent back as private, so no others can see.
 
 When first starting, you will have a bit of work ahead of you in adding all your current users. You (and your yardmasters) will be using the /add_user command for each of your server members (including themselves). The bot will prevent duplicates from being entered. 
 
