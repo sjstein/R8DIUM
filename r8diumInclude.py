@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License along with R8DIUM.
 # If not, see <https://www.gnu.org/licenses/>.
 ##########################
-
 import configparser
 
 SOFTWARE_VERSION = 'Articulated'
@@ -40,23 +39,9 @@ try:
     # Discord bot unique token
     TOKEN = config['discord']['bot_token']
 
-    # Discord user levels (roles)
-    USR_LVL0 = config['discord']['usr_lvl0']
-    USR_LVL1 = config['discord']['usr_lvl1']
-    USR_LVL2 = config['discord']['usr_lvl2']
-    USR_LVL3 = config['discord']['usr_lvl3']
-
-    BOT_ROLES = [USR_LVL0, USR_LVL1, USR_LVL2, USR_LVL3]
-
     # Discord channels
-    CH_ADMIN = config['discord']['ch_0']
-    CH_USER = config['discord']['ch_1']
+    CH_ADMIN = config['discord']['ch_admin']
     CH_LOG = config['discord']['ch_log']
-    # Restrict interaction based on channels?
-    if config['discord']['ch_permissions'] == 'False':
-        CH_RQD = False
-    else:
-        CH_RQD = True
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
 
@@ -70,4 +55,3 @@ except KeyError as e:
 except Exception as e:
     print(f'\nr8dium ({__name__}.py: FATAL exception type unknown - contact devs')
     exit(-1)
-

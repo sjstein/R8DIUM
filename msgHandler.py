@@ -19,6 +19,8 @@ import random
 import string
 import dbAccess
 from r8diumInclude import DB_FILENAME, LOG_FILENAME
+
+
 def generate_password(length=20,
                       lowercase=True,
                       uppercase=True,
@@ -47,7 +49,7 @@ def generate_password(length=20,
 
 def write_log_file(msg):
     fp = open(LOG_FILENAME, 'a')
-    datestr = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    datestr = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     fp.write(f'[{datestr}] {msg}\n')
     fp.close()
     return
@@ -90,14 +92,14 @@ def add_user(discord_id, discord_name, ldb):
     if dbAccess.get_element(discord_id[2:-1], dbAccess.discord_id, dbAccess.sid, ldb) != -1:
         return f'[r8udbBot: ID ERROR] Discord id "{discord_id}" already exists'
     new_sid = dbAccess.add_new_user(discord_id, discord_name, ldb)
-    new_pass = generate_password(random.randint(15, 25))
+    password = generate_password(random.randint(15, 25))
     join_date = datetime.date.today().strftime('%#m/%#d/%y')
-    dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, new_pass, ldb)
+    dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, password, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return f'{discord_name} (SID: {new_sid}) added on {join_date}, pass: {new_pass}'
+    return f'{discord_name} (SID: {new_sid}) added on {join_date}, pass: {password}'
 
 
 def delete_user(sid, ldb):
@@ -143,7 +145,7 @@ def ban_user(sid, duration, reason, ldb):
     add_note(sid, f'Banned ({ban_date}) for {duration} days - {reason}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return (f'User "{dbAccess.get_element(sid,dbAccess.sid,dbAccess.discord_name, ldb)}" '
+    return (f'User "{dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_name, ldb)}" '
             f'[SID: {sid}]) **Banned** and password changed')
 
 
@@ -157,7 +159,7 @@ def unban_user(sid, admin_name, ldb):
     add_note(sid, f'UNbanned ({current_date}) by {admin_name}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return (f'User "{dbAccess.get_element(sid,dbAccess.sid,dbAccess.discord_name, ldb)}" '
+    return (f'User "{dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_name, ldb)}" '
             f'[SID: {sid}]) **Unbanned**')
 
 
@@ -212,8 +214,8 @@ def new_pass(discord_id, ldb):
     # Writing to log file here in order to back-track any nefarious password sharing
     # NOTE: Definitely not very secure storing the password in cleartext, but welcome to the jungle
     write_log_file(f'PASSWORD (RE)SET REQUEST: discord_id [{discord_id}], discord_name ['
-                  f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}] '
-                  f'{new_pw}')
+                   f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}] '
+                   f'{new_pw}')
     return f'new password = {new_pw}'
 
 
