@@ -33,6 +33,9 @@ try:
     else:
         SEND_STATS = False
 
+    R8SERVER_ADDR = config['local']['r8server_addr']
+    R8SERVER_PORT = config['local']['r8server_port']
+
     DB_FILENAME = USER_DB + '.csv'
     LOG_FILENAME = LOG_FILE + '.log'
 

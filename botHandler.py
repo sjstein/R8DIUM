@@ -19,7 +19,7 @@ from discord.ext import commands, tasks   # noqa
 import asyncio    # noqa
 import dbAccess
 import msgHandler
-from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG
+from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT
 
 
 def log_message(interaction) -> str:
@@ -215,8 +215,7 @@ def run_discord_bot(ldb):
         response = msgHandler.write_field(sid, field, val, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
-# The following two commands are available to all users if they are at USR_LVL2 or better
-# This allows uers who have server access to check and refresh their password from any channel
+# The following commands are to be opened up to all Discord users who have access to your server
     @client.tree.command(name='show_password',
                          description=f'Display your Run8 server password in a message only you can see')
     async def show_password(interaction: discord.Interaction):
@@ -237,13 +236,13 @@ def run_discord_bot(ldb):
         response = msgHandler.new_pass(user_id, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
-    @client.tree.command(name='ping_bot',
-                         description=f'Refresh your Run8 server password and display in a message only you can see')
-    async def ping_bot(interaction: discord.Interaction):
+    @client.tree.command(name='server_info',
+                         description=f'Show the Run 8 server address and port')
+    async def server_info(interaction: discord.Interaction):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = 'R8DIUM says "Pong!"'
+        response = f'Run 8 server address: *{R8SERVER_ADDR}*\nRun 8 server port: *{R8SERVER_PORT}*'
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     client.run(TOKEN)
