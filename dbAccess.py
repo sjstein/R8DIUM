@@ -22,7 +22,10 @@ import uuid
 import xmltodict
 from r8diumInclude import SECURITY_FILE, DB_FILENAME, SEND_STATS, SOFTWARE_VERSION
 
-STAT_URL = 'http://'
+STAT_URL = ''
+# Don't bother trying to send stats until we get a decent endpoint
+if STAT_URL == '':
+    SEND_STATS = False
 
 # Below define the tags which Run8 uses inside the security XML
 XML_ROOT_NAME = 'HostSecurityData'
@@ -159,11 +162,15 @@ def merge_security_file(ldb: list):
     update_flag = False
     retstr = '`Merge results:\n-------------\n'
 
-    if type(xml_in[XML_ROOT_NAME]) == dict:
+    if type(xml_in[XML_ROOT_NAME]) is not dict:
         # No entries in XML, just return
         return f'File merge error : No category names found'
 
-    if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]) == dict:
+    if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME]) is not dict:
+        # No user entries in XML, just return
+        return f'File merge error : No names found'
+
+    if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]) is dict:
         # Edge case to take of a single entry for XML-UNIQUE_NAME, just return and allow complete rewrite
         return f'File merge error : only one {XML_UNIQUE_NAME} entry found'
 
