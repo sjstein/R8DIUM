@@ -49,7 +49,15 @@ security_file = HostSecurity.xml
 **<code>r8server_port</code></strong>is the port number of your run8 server. This is used to provide users valid info with the /server_info command.
 
 
-**<code>send_stats</code></strong>should be either <strong>True </strong>or <strong>False</strong>. If set to True, the bot will send a small amount of statistics to the developer (a unique anonymous identifier for your server, and the number of users in the database). It is much appreciated if you leave this set to <strong>True</strong>
+**<code>send_stats</code></strong>should be either <strong>True </strong>or <strong>False</strong>. 
+If set to True, the bot will send a small amount of statistics to the developer (a unique anonymous identifier for your server, and the number of users in the database). 
+It is much appreciated if you this set to <strong>True</strong> and obtain your unique token.
+See the document [STATS-OPT-IN.md](STATS-OPT-IN.md) for obtaining your unique token.
+
+**<code>stat_token</code></strong>will contain your unique token used to send statistics to the developer. 
+See the document [STATS-OPT-IN.md](STATS-OPT-IN.md) for obtaining your unique token.
+
+
 
 **<code>bot_token</code></strong>is where you will paste your unique Discord bot token acquired from the Discord developer portal.
 
