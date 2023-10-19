@@ -20,9 +20,8 @@ import requests
 import uuid
 
 import xmltodict
-from r8diumInclude import SECURITY_FILE, DB_FILENAME, SEND_STATS, SOFTWARE_VERSION
+from r8diumInclude import SECURITY_FILE, DB_FILENAME, SEND_STATS, SOFTWARE_VERSION, STAT_URL, STAT_TOKEN
 
-STAT_URL = ''
 # Don't bother trying to send stats until we get a decent endpoint
 if STAT_URL == '':
     SEND_STATS = False
@@ -105,11 +104,13 @@ def save_db(filename: str, ldb: list) -> int:
 
 def send_statistics(ldb: list):
     if SEND_STATS:
+        # Create unique hashed server id
         server_mac_addr = ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)])
         server_id = hashlib.md5((server_mac_addr + SECURITY_FILE).encode()).hexdigest()
-        put_dict = {'server_id': server_id, 'bot_version': SOFTWARE_VERSION, 'number_of_users': len(ldb)-1}
-        return_val = requests.post(STAT_URL, put_dict)
-        return return_val
+
+        header_dict = {'Authorization': STAT_TOKEN}
+        put_dict = {'a': server_id, 'b': SOFTWARE_VERSION, 'c': len(ldb)}
+        return_val = requests.post(STAT_URL, data=put_dict, headers=header_dict)
     return
 
 

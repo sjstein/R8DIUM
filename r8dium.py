@@ -16,8 +16,16 @@
 ##########################
 import botHandler
 import dbAccess
-from r8diumInclude import DB_FILENAME
+import time
+from r8diumInclude import DB_FILENAME, SEND_STATS, SOFTWARE_VERSION
 
 if __name__ == '__main__':
     userDb = dbAccess.load_db(DB_FILENAME)
+    if not SEND_STATS:
+        print("\nIt appears R8DIUM is running without reporting anonymous statistics.")
+        print("Please consider enabling this feature as it will help improve this software.")
+        print("See STATS-OPT-IN.md for details on how to opt-in for this.")
+        print("Thanks in advance!\n\n")
+        time.sleep(1)
+    print(f'R8DIUM [{SOFTWARE_VERSION}] is starting.')
     botHandler.run_discord_bot(userDb)
