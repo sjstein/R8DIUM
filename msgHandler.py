@@ -104,6 +104,7 @@ def add_user(discord_id, discord_name, ldb):
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
+    dbAccess.send_statistics(ldb)
     return f'{discord_name} (SID: {new_sid}) added on {join_date}, pass: {password}'
 
 
@@ -114,6 +115,7 @@ def delete_user(sid, ldb):
         return f'[R8DIUM: UNK ERROR] in delete user routine'
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
+    dbAccess.send_statistics(ldb)
     return f'User sid: {sid} deleted'
 
 

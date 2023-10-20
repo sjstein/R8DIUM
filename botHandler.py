@@ -129,7 +129,6 @@ def run_discord_bot(ldb):
             await log_channel.send(log_message(interaction))
         discord_name = await client.fetch_user(int(discord_id[2:-1]))
         response = msgHandler.add_user(discord_id, discord_name, ldb)
-        dbAccess.send_statistics(ldb)       # Send usage data
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='change_roll',
@@ -150,7 +149,6 @@ def run_discord_bot(ldb):
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
         response = msgHandler.delete_user(sid, ldb)
-        dbAccess.send_statistics(ldb)       # Send usage data
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='ban_user',
