@@ -16,7 +16,7 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'Articulated'
+SOFTWARE_VERSION = 'Bifurcated'
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
 
@@ -36,7 +36,7 @@ try:
     STAT_TOKEN = config['local']['stat_token']
 
     if not SEND_STATS and (STAT_TOKEN != '' or STAT_TOKEN != '[insert STAT token]'):
-        print('**WARNING**\nIt appears you have entered a stat_token, but not opted in to statistics sharing!\n'
+        print('**WARNING**\nIt appears that you have entered a stat_token, but not opted in to statistics sharing!\n'
               'Please check your configuration file for errors. See the file STATS-OPT-IN for details.')
     if SEND_STATS and (STAT_TOKEN == '' or STAT_TOKEN == '[insert STAT token]'):
         print('**WARNING**\nYou have opted in to share statistics with the developers - thanks!\nHowever it appears you have yet to '
