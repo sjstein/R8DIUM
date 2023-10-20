@@ -9,6 +9,25 @@ current password, and request a new one be generated.
 R8DIUM keeps a local database of user records for its own use, and updates the Run8 HostSecurity.xml to reflect changes
 to the Run8 server.
 
+### BLUF:
+
+* R8DIUM was designed to make the job of _Run8 server_ USER administration easier by automating certain server 
+maintenance tasks.
+* Since R8DIUM is designed to run on the same machine or network which the _Run8 server_ is hosted on, all data is stored 
+locally - **no data is exported off the host machine**.
+* R8DIUM utilizes individual passwords for all _Run8 server_ members. 
+* Utilizing **Discord server** roles, the _Run8 server_ owner can delegate certain personnel the ability to add, remove,
+ban and unban users by using R8DIUM commands. 
+* R8DIUM handles tracking of _Run8 server_ USER passwords and their active/banned status. 
+* R8DIUM will automatically unban users after a specified duration has elapsed. 
+* R8DIUM synchronizes its own user data with the _Run8 server_ security file - no need for manual edits.
+* R8DIUM allows storing and reading of notes for each user it tracks.
+* R*DIUM has limited commands to interact with users - allowing them to view their password, request a new password, 
+and view _Run8 server_ info (address and port).
+* All R*DIUM responses are sent back to the requester as private text - no one else will see them.
+* R*DIUM has the ability to log all commands it receives - to a file and/or a specific Discord channel.
+
+
 ---------------
 
 ## R8DIUM is a Discord bot that runs on your local machine
