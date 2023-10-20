@@ -323,6 +323,4 @@ def next_avail_sid(ldb: list):
 
 
 if __name__ == '__main__':
-    test = [1, 2, 3]
-    send_statistics(test)
     pass

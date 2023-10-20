@@ -22,7 +22,7 @@ from r8diumInclude import DB_FILENAME, SEND_STATS, SOFTWARE_VERSION
 if __name__ == '__main__':
     userDb = dbAccess.load_db(DB_FILENAME)
     if not SEND_STATS:
-        print("\nIt appears R8DIUM is running without reporting anonymous statistics.")
+        print("\nOh no! R8DIUM is running without reporting anonymous statistics.")
         print("Please consider enabling this feature as it will help improve this software.")
         print("See STATS-OPT-IN.md for details on how to opt-in for this.")
         print("Thanks in advance!\n\n")
