@@ -48,9 +48,14 @@ def generate_password(length=20,
 
 
 def write_log_file(msg):
-    fp = open(LOG_FILENAME, 'a')
-    datestr = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    fp.write(f'[{datestr}] {msg}\n')
+    try:
+        fp = open(LOG_FILENAME, mode='a', encoding='utf-16')    # Using utf-16 because discord does
+        datestr = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        fp.write(f'[{datestr}] {msg}\n')
+
+    except Exception as e:
+        print(f'Exception in write_log_file : {e}')
+
     fp.close()
     return
 
@@ -67,17 +72,17 @@ def check_ban_status(sid, ldb):
 
 def read_field(sid, field_name, ldb):
     if field_name not in dbAccess.db_field_list:
-        return f'[r8udbBot: FIELD ERROR] field: "{field_name}" unknown'
+        return f'[R8DIUM: FIELD ERROR] field: "{field_name}" unknown'
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     return dbAccess.get_element(sid, dbAccess.sid, field_name, ldb)
 
 
 def write_field(sid, field_name, write_val, ldb):
     if field_name not in dbAccess.db_field_list:
-        return f'[r8udbBot: FIELD ERROR] field: "{field_name}" unknown'
+        return f'[R8DIUM: FIELD ERROR] field: "{field_name}" unknown'
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     if int(dbAccess.set_element(sid, dbAccess.sid, field_name, write_val, ldb)) > 0:
         dbAccess.save_db(DB_FILENAME, ldb)
         dbAccess.write_security_file(ldb)
@@ -85,12 +90,12 @@ def write_field(sid, field_name, write_val, ldb):
             return '<null>'
         return write_val
     else:
-        return f'[r8udbBot: WRITE ERROR] unknown failure to write to field: {field_name}'
+        return f'[R8DIUM: WRITE ERROR] unknown failure to write to field: {field_name}'
 
 
 def add_user(discord_id, discord_name, ldb):
     if dbAccess.get_element(discord_id[2:-1], dbAccess.discord_id, dbAccess.sid, ldb) != -1:
-        return f'[r8udbBot: ID ERROR] Discord id "{discord_id}" already exists'
+        return f'[R8DIUM: ID ERROR] Discord id "{discord_id}" already exists'
     new_sid = dbAccess.add_new_user(discord_id, discord_name, ldb)
     password = generate_password(random.randint(15, 25))
     join_date = datetime.date.today().strftime('%#m/%#d/%y')
@@ -104,9 +109,9 @@ def add_user(discord_id, discord_name, ldb):
 
 def delete_user(sid, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     if dbAccess.del_user(sid, ldb) < 0:
-        return f'[r8udbBot: UNK ERROR] in delete user routine'
+        return f'[R8DIUM: UNK ERROR] in delete user routine'
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
     return f'User sid: {sid} deleted'
@@ -114,7 +119,7 @@ def delete_user(sid, ldb):
 
 def add_note(sid, note, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     curr_note = dbAccess.get_element(sid, dbAccess.sid, dbAccess.notes, ldb)
     if curr_note:
         update = curr_note + '|' + str(note)
@@ -127,7 +132,7 @@ def add_note(sid, note, ldb):
 
 def add_role(sid, role, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     dbAccess.set_element(sid, dbAccess.sid, dbAccess.role, str(role), ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     return f'Role: "{role}" given to user: {dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_name, ldb)}'
@@ -135,7 +140,7 @@ def add_role(sid, role, ldb):
 
 def ban_user(sid, duration, reason, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     ban_date = datetime.date.today().strftime('%#m/%#d/%y')
     # ban_date = datetime.date.today()
     dbAccess.set_element(sid, dbAccess.sid, dbAccess.banned, True, ldb)
@@ -151,7 +156,7 @@ def ban_user(sid, duration, reason, ldb):
 
 def unban_user(sid, admin_name, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     current_date = datetime.date.today().strftime('%#m/%#d/%y')
     dbAccess.set_element(sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.set_element(sid, dbAccess.sid, dbAccess.ban_date, '', ldb)
@@ -176,16 +181,17 @@ def list_users(ldb):
 
 def show_notes(sid, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     return_string = dbAccess.get_element(sid, dbAccess.sid, dbAccess.notes, ldb)
     if return_string == '':
         return_string = '<none>'
     return return_string
 
 
-def show_pass(discord_id, ldb):
+def show_pass(discord_id, discord_name, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] ID "{discord_id}" not found'
+        add_user('<@' + str(discord_id) + '>', discord_name, ldb)   # give the md tags back to the UID
+        return show_pass(discord_id, discord_name, ldb)
     if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.banned, ldb) == 'True':
         return f'You are currently banned'  # Don't let banned users see their password
     result = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.password, ldb)
@@ -194,7 +200,7 @@ def show_pass(discord_id, ldb):
 
 def show_user(sid, ldb):
     if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] SID "{sid}" not found'
+        return f'[R8DIUM: INDEX ERROR] SID "{sid}" not found'
     result = ''
     for field_name in dbAccess.db_field_list:
         result += f'{field_name}: {dbAccess.get_element(sid, dbAccess.sid, field_name, ldb)}\n'
@@ -203,7 +209,7 @@ def show_user(sid, ldb):
 
 def new_pass(discord_id, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.sid, ldb)) < 0:
-        return f'[r8udbBot: INDEX ERROR] User "{discord_id}" not found'
+        return f'[R8DIUM: INDEX ERROR] User "{discord_id}" not found'
     if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.banned, ldb) == 'True':
         return f'You are currently banned'  # Don't let banned users see their password
     new_pw = generate_password(random.randint(15, 25))

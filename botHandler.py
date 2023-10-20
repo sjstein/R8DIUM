@@ -220,10 +220,11 @@ def run_discord_bot(ldb):
                          description=f'Display your Run8 server password in a message only you can see')
     async def show_password(interaction: discord.Interaction):
         user_id = str(interaction.user.id)
+        discord_name = await client.fetch_user(int(user_id))
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.show_pass(user_id, ldb)
+        response = msgHandler.show_pass(user_id, discord_name, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='refresh_pass',

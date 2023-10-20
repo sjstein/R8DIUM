@@ -121,7 +121,8 @@ After these are added, they will show in  the command list like this:
 ![alt_text](images/image1.png "image_tooltip")
 
 
-(Note in this case, the /bot_ping command was also given user access)
+~~(Note in this case, the /bot_ping command was also given user access)~~
+This command has been replaced with /server_info
 
 Make sure to save and then test.
 
@@ -161,10 +162,11 @@ If you made it this far, your system *should* be running!
 
 _NOTE_: <span style="text-decoration:underline;">All</span> responses to commands are sent back as private, so no others can see.
 
-When first starting, you will have a bit of work ahead of you in adding all your current users. You (and your yardmasters) will be using the /add_user command for each of your server members (including themselves). The bot will prevent duplicates from being entered. 
+Assuming you have a Discord role for those users who have access to your Run8 server, populated the user database should be simple. 
+Just make a general announcement to your users that you are switching to private passwords, and tell them to use the `/show_password` command to see theirs.
+When they use this command, if they are not currently captured in the user database, they will first be added and then a password assigned and shown to them.
 
-To add a user just type:
-
+Of course, as an admin you can also add users by typing:
 
 ```
 /add_user @username 
