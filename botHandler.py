@@ -57,7 +57,7 @@ def run_discord_bot(ldb):
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(local_db):
-        if type(local_db) != list:   # local_db must be empty - showing as NoneType
+        if type(local_db) is not list:   # local_db must be empty - showing as NoneType
             return
         channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
         channel = client.get_channel(channel_id)
@@ -173,7 +173,7 @@ def run_discord_bot(ldb):
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
         response = msgHandler.unban_user(discord_id[2:-1], interaction.user.name, ldb)
-        # Write a user to the admin channel letting other admins know a user has been un-banned
+        # Write a message to the admin channel letting other admins know a user has been un-banned
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
