@@ -125,15 +125,13 @@ def write_security_file(ldb: list):
     usr_list = xml_dict[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
     for record in ldb:
         if record[banned] == 'True':
-            for _uid in record[uid].split('|'):
-                ban_list.append({XML_NAME: record[run8_name],
-                                 XML_UID: _uid,
-                                 XML_IP: record[ip]})
+            ban_list.append({XML_NAME: record[run8_name],
+                             XML_UID: record[uid],
+                             XML_IP: record[ip]})
         elif record[banned] == 'False' and record[password] != '':  # Don't save users without pw
-            for _uid in record[uid].split('|'):
-                usr_list.append({XML_NAME: record[run8_name],
-                                XML_UID: _uid,
-                                XML_PASSWORD: record[password]})
+            usr_list.append({XML_NAME: record[run8_name],
+                             XML_UID: record[uid],
+                             XML_PASSWORD: record[password]})
     xml_out = xmltodict.unparse(xml_dict, pretty=True)
 
     try:
@@ -206,10 +204,14 @@ def merge_security_file(ldb: list):
                     new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
                     # When run8 devs finally decide to capture the name, uncomment below
                     # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
-                    if current_uid.find(new_uid) < 0:
-                        # We have a unique UID tied to an existing password; append this new one to UID field
-                        new_uid = new_uid + '|' + current_uid
-                        update_flag = True
+                    if new_uid != current_uid:
+                        # db and xml do not match, what to do? Just notify user for now
+                        # Maybe we should start keeping a list of these UIDs? (ala Notes)
+                        retstr += f'Existing UID mismatch for SID[{new_sid}]:\n'
+                        retstr += f' database file UID: {current_uid}\n'
+                        retstr += f' host_security UID: {new_uid}\n'
+                        retstr += (f'Database file NOT updated for this record\n'
+                                   f'-----------------------------------------')
                     else:
                         retstr += f'Existing UID valid for SID[{new_sid}]\n'
                 except KeyError:
