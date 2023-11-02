@@ -217,10 +217,7 @@ def new_pass(discord_id, ldb):
         return f'You are currently banned'  # Don't let banned users see their password
     new_pw = generate_password(random.randint(15, 25))
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password, new_pw, ldb)
-    if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.uid, ldb) is not None and \
-            (dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.uid, ldb)[-1] != '|'):
-        new_uid = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.uid, ldb) + '|'
-        dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.uid, new_uid, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.uid, None, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
     # Writing to log file here in order to back-track any nefarious password sharing
