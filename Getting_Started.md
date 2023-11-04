@@ -17,6 +17,7 @@ r8server_port = 00000
 # Please consider leaving the following value set to True as it will help us determine future developments
 # Currently the statistics sent are a unique hashed server ID and the number of users your database contains
 send_stats = False
+stat_token = putYourStatTokenHere
 
 [discord]
 # bot_token is PRIVATE and unique to the particular bot instance
@@ -191,7 +192,7 @@ If you somehow add a user you don’t want any longer, you can:
 
 
 ```
-/del_user <sid>
+/del_user @username
 ```
 
 
@@ -199,7 +200,7 @@ During server operation, you are able to ban a user with the command:
 
 
 ```
-/ban_user <sid> <duration> <reason>
+/ban_user @username <duration> <reason>
 ```
 
 
@@ -209,7 +210,7 @@ If it is desired to unban a user before their ban duration has elapsed, you can 
 
 
 ```
-/unban_user <sid>
+/unban_user @username
 ```
 
 
@@ -217,7 +218,7 @@ You can show details on a specific user with:
 
 
 ```
-/show_user <sid>
+/show_user @username
 ```
 
 
@@ -225,7 +226,7 @@ You can add and read notes on a user with:
 
 
 ```
-/write_note <sid> <note>
+/write_note @username <note>
 ```
 
 
@@ -233,7 +234,7 @@ and
 
 
 ```
-/read_notes <sid>
+/read_notes @username
 ```
 
 

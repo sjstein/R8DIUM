@@ -16,7 +16,7 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'Bifurcated'
+SOFTWARE_VERSION = 'Chelated'
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
 

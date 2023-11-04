@@ -22,6 +22,10 @@ import msgHandler
 from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT
 
 
+def scrub_id(id_str: str):
+    return id_str[2:-1]
+
+
 def log_message(interaction) -> str:
     log_msg = f'**{interaction.user.name} ({interaction.user.display_name})** executed: `{interaction.command.name} '
     if 'options' in interaction.data:
@@ -41,7 +45,6 @@ def run_discord_bot(ldb):
 
     @client.event
     async def on_ready():
-        print(f'R8DIUM [{SOFTWARE_VERSION}] starting')
         print(f'Discord bot [{client.user}] is now running')
         msgHandler.write_log_file(f'------------------')
         msgHandler.write_log_file(f'R8DIUM [{SOFTWARE_VERSION}] starting')
@@ -58,7 +61,7 @@ def run_discord_bot(ldb):
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(local_db):
-        if type(local_db) != list:   # local_db must be empty - showing as NoneType
+        if type(local_db) is not list:   # local_db must be empty - showing as NoneType
             return
         channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
         channel = client.get_channel(channel_id)
@@ -91,33 +94,33 @@ def run_discord_bot(ldb):
 
     @client.tree.command(name='read_notes',
                          description=f'Display all notes for user <sid>')
-    @app_commands.describe(sid='The SID of the user')
-    async def read_notes(interaction: discord.Interaction, sid: int):
+    @app_commands.describe(discord_id='@id')
+    async def read_notes(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = '* ' + msgHandler.show_notes(sid, ldb).replace('|', '\n* ')
+        response = '* ' + msgHandler.show_notes(scrub_id(discord_id), ldb).replace('|', '\n* ')
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='write_note',
                          description=f'write note about <sid>')
-    @app_commands.describe(sid='The SID of the user',
+    @app_commands.describe(discord_id='@id',
                            note='Note to add to user data')
-    async def write_note(interaction: discord.Interaction, sid: int, note: str):
+    async def write_note(interaction: discord.Interaction, discord_id: str, note: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.add_note(sid, note, ldb)
+        response = msgHandler.add_note(scrub_id(discord_id), note, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='show_user',
                          description=f'Display all fields for user <sid>')
-    @app_commands.describe(sid='The SID of the user')
-    async def show_user(interaction: discord.Interaction, sid: int):
+    @app_commands.describe(discord_id='@id')
+    async def show_user(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.show_user(sid, ldb)
+        response = msgHandler.show_user(scrub_id(discord_id), ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='add_user',
@@ -127,40 +130,40 @@ def run_discord_bot(ldb):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        discord_name = await client.fetch_user(int(discord_id[2:-1]))
+        discord_name = await client.fetch_user(int(scrub_id(discord_id)))
         response = msgHandler.add_user(discord_id, discord_name, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='change_roll',
                          description=f'Set role <role_str> to user <sid>')
-    @app_commands.describe(sid='user SID', role='role name')
-    async def change_roll(interaction: discord.Interaction, sid: int, role: str):
+    @app_commands.describe(discord_id='@id', role='role name')
+    async def change_roll(interaction: discord.Interaction, discord_id: str, role: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.add_role(sid, role, ldb)
+        response = msgHandler.add_role(scrub_id(discord_id), role, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='del_user',
                          description=f'Delete user <sid>')
-    @app_commands.describe(sid='User SID')
-    async def del_user(interaction: discord.Interaction, sid: str):
+    @app_commands.describe(discord_id='@id')
+    async def del_user(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.delete_user(sid, ldb)
+        response = msgHandler.delete_user(scrub_id(discord_id), ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='ban_user',
-                         description=f'ban user <sid> <duration(days)> <reason(string)>')
-    @app_commands.describe(sid='The SID of the user',
+                         description=f'ban user @id <duration(days)> <reason(string)>')
+    @app_commands.describe(discord_id='@id',
                            duration='Length of ban in days',
                            reason='Reason for ban (short description)')
-    async def ban_user(interaction: discord.Interaction, sid: int, duration: int, reason: str):
+    async def ban_user(interaction: discord.Interaction, discord_id: str, duration: int, reason: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.ban_user(sid, duration, reason, ldb)
+        response = msgHandler.ban_user(scrub_id(discord_id), duration, reason, ldb)
         # Write a message on the admin channel letting other admins know a user has been banned
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
@@ -168,26 +171,25 @@ def run_discord_bot(ldb):
 
     @client.tree.command(name='unban_user',
                          description=f'unban user <sid>')
-    @app_commands.describe(sid='The SID of the user')
-    async def unban_user(interaction: discord.Interaction, sid: int):
+    @app_commands.describe(discord_id='@id')
+    async def unban_user(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.unban_user(sid, interaction.user.name, ldb)
-        # Write a user to the admin channel letting other admins know a user has been un-banned
+        response = msgHandler.unban_user(scrub_id(discord_id), interaction.user.name, ldb)
+        # Write a message to the admin channel letting other admins know a user has been un-banned
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='generate_pass',
                          description=f'Generate a new password for user <sid>')
-    @app_commands.describe(sid='The SID of the user')
-    async def generate_pass(interaction: discord.Interaction, sid: int):
+    @app_commands.describe(discord_id='@id')
+    async def generate_pass(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        user_id = dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_id, ldb)
-        response = msgHandler.new_pass(user_id, ldb)
+        response = msgHandler.new_pass(scrub_id(discord_id), ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='arb_read',
