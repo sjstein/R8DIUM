@@ -3,6 +3,7 @@
 *.json
 r8diumDb.csv
 r8dium.cfg
+user_list.txt
 venv/
 .idea/
 __pycache__/
