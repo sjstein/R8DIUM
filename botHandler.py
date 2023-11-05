@@ -21,6 +21,8 @@ import dbAccess
 import msgHandler
 from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT
 
+discord_char_limit = 1900
+tmp_filename = 'user_list.txt'
 
 def scrub_id(id_str: str):
     return id_str[2:-1]
@@ -90,7 +92,13 @@ def run_discord_bot(ldb):
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
         response = msgHandler.list_users(ldb)
-        await interaction.response.send_message(response, ephemeral=True)  # noqa
+        if len(response) > discord_char_limit:
+            tf = open(tmp_filename, 'w')
+            tf.write(response)
+            tf.close()
+            await interaction.response.send_message(file=discord.File(tmp_filename), ephemeral=True)  # noqa
+        else:
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='read_notes',
                          description=f'Display all notes for user <sid>')

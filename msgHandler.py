@@ -172,14 +172,14 @@ def unban_user(discord_id, admin_name, ldb):
 
 
 def list_users(ldb):
-    return_str = '## User list\n`[sid] discord_name / discord_id : run8 name\n\n'
+    return_str = f'## User list (total: {len(ldb)})\ndiscord_name / discord_id : join date\n\n'
     for record in ldb:
-        return_str += (f'[{record[dbAccess.sid]}] : {record[dbAccess.discord_name]} / '
-                       f'{record[dbAccess.discord_id]} : {record[dbAccess.run8_name]}')
+        return_str += (f'[{record[dbAccess.sid]}] {record[dbAccess.discord_name]} / '
+                       f'{record[dbAccess.discord_id]} : {record[dbAccess.join_date]}')
         if record[dbAccess.banned] == 'True':
             return_str += f' **--> BANNED on {record[dbAccess.ban_date]} for {record[dbAccess.ban_duration]} days <--**'
         return_str += '\n'
-    return return_str + '`'
+    return return_str
 
 
 def show_notes(discord_id, ldb):
