@@ -70,8 +70,7 @@ def run_discord_bot(ldb):
         for record in local_db:
             if record[dbAccess.banned] == 'True':
                 if not msgHandler.check_ban_status(record[dbAccess.sid], local_db):
-                    msgHandler.unban_user(record[dbAccess.sid], 'Automated check', local_db)
-                    print(f'scan_ban just unbanned: {record[dbAccess.sid]}')
+                    msgHandler.unban_user(record[dbAccess.discord_id], 'Automated check', local_db)
                     await channel.send(f'**Automated scan** unbanned: [{record[dbAccess.sid]}] '
                                        f'{record[dbAccess.discord_name]}')
 
@@ -178,7 +177,7 @@ def run_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='unban_user',
-                         description=f'unban user <sid>')
+                         description=f'unban user @id')
     @app_commands.describe(discord_id='@id')
     async def unban_user(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
@@ -191,7 +190,7 @@ def run_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='generate_pass',
-                         description=f'Generate a new password for user <sid>')
+                         description=f'Generate a new password for user @id')
     @app_commands.describe(discord_id='@id')
     async def generate_pass(interaction: discord.Interaction, discord_id: str):
         if CH_LOG != 'none':
@@ -201,26 +200,26 @@ def run_discord_bot(ldb):
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='arb_read',
-                         description=f'read value of field <field> of user <sid>')
-    @app_commands.describe(sid='The SID of the user',
+                         description=f'read value of field <field> of user @id')
+    @app_commands.describe(discord_id='@id',
                            field='Field name to show')
-    async def arb_read(interaction: discord.Interaction, sid: int, field: str):
+    async def arb_read(interaction: discord.Interaction, discord_id: str, field: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = f'{field} : {msgHandler.read_field(sid, field, ldb)}'
+        response = f'{field} : {msgHandler.read_field(scrub_id(discord_id), field, ldb)}'
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='arb_write',
-                         description=f'write value <val> to field <field> of user <sid>')
-    @app_commands.describe(sid='The SID of the user',
+                         description=f'write value <val> to field <field> of user @id')
+    @app_commands.describe(discord_id='@id',
                            field='Field name to write to',
                            val='Value to write')
-    async def arb_write(interaction: discord.Interaction, sid: int, field: str, val: str = ''):
+    async def arb_write(interaction: discord.Interaction, discord_id: str, field: str, val: str = ''):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.write_field(sid, field, val, ldb)
+        response = msgHandler.write_field(scrub_id(discord_id), field, val, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
 # The following commands are to be opened up to all Discord users who have access to your server
