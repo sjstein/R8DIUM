@@ -62,7 +62,7 @@ def write_log_file(msg):
 
 def check_ban_status(sid, ldb):
     ban_date = dbAccess.get_element(sid, dbAccess.sid, dbAccess.ban_date, ldb)
-    ban_duration = dbAccess.get_element(sid, dbAccess.discord_id, dbAccess.ban_duration, ldb)
+    ban_duration = dbAccess.get_element(sid, dbAccess.sid, dbAccess.ban_duration, ldb)
     bdate = datetime.datetime.strptime(ban_date, '%m/%d/%y')
     if (datetime.datetime.today() - bdate).days < int(ban_duration):
         return True
