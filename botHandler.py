@@ -14,18 +14,53 @@
 # You should have received a copy of the GNU General Public License along with R8DIUM.
 # If not, see <https://www.gnu.org/licenses/>.
 ##########################
+import datetime
 import discord
 from discord.ext import commands, tasks   # noqa
 import asyncio    # noqa
 import dbAccess
 import msgHandler
-from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT
+from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT, DB_FILENAME
 
 discord_char_limit = 1900
 tmp_filename = 'user_list.txt'
+log_filename = 'test.log'   # get this from configuration file
+
 
 def scrub_id(id_str: str):
     return id_str[2:-1]
+
+
+def scan_logins(ldb):
+    write_db = False
+    fp = open(log_filename, 'r')
+    for line in fp.readlines():
+        if 'Name' in line and 'PW:' in line:
+            lft_line = line.split(',')[0]
+            rt_line = line.split(',')[1]
+            date = lft_line.split(' ')[0]
+            time = lft_line.split(' ')[1]
+            name = rt_line.split('Name:')[1].split('  PW:')[0]
+            pw = rt_line.split('PW:')[1].split('  UID:')[0]
+            uid = rt_line.split('UID:')[1].split('  IP:')[0]
+            ip = rt_line.split('::ffff:')[1].split(']:')[0]
+            print(f'{date} : {time} : {name} : {pw} : {uid} : {ip}')
+            last_login = dbAccess.get_element(pw, dbAccess.password, dbAccess.last_login, ldb)
+            if last_login == '':
+                last_login = '2000-1-1'
+            # What to do if the password isn't found? Possible if the user changed pass in-between scans
+            if last_login == -1:
+                break
+            log_date = datetime.datetime.strptime(date, '%Y-%m-%d')
+            last_date = datetime.datetime.strptime(last_login, '%Y-%m-%d')
+            if (log_date - last_date).days > 0:
+                dbAccess.set_element(pw, dbAccess.password, dbAccess.last_login, log_date.date(), ldb)
+                dbAccess.set_element(pw, dbAccess.password, dbAccess.ip, ip, ldb)
+                print('writing new login date')
+                write_db = True
+    if write_db:
+        dbAccess.save_db(DB_FILENAME, ldb)
+    return
 
 
 def log_message(interaction) -> str:
@@ -60,6 +95,7 @@ def run_discord_bot(ldb):
         print(f'Starting banned user periodic checks')
         msgHandler.write_log_file(f'Starting banned user periodic checks')
         scan_banned_users.start(ldb)
+        scan_logins(ldb)
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(local_db):
