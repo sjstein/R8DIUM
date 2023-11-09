@@ -293,7 +293,7 @@ def add_new_user(name: str, user_name, ldb: list):
     for field in db_field_list:
         record[field] = ''
     record[sid] = str(new_sid)
-    record[discord_id] = name[2:-1]  # Strip off Discord md codes
+    record[discord_id] = name
     if record[discord_name] == '':
         record[discord_name] = user_name
     if new_sid <= len(ldb):
