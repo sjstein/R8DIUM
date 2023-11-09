@@ -147,7 +147,7 @@ def add_role(discord_id, role, ldb):
     return f'Role: "{role}" given to user: {dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}'
 
 
-def ban_user(discord_id, duration, reason, ldb):
+def ban_user(discord_id, admin_name, duration, reason, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
     ban_date = datetime.date.today().strftime('%#m/%#d/%y')
@@ -160,8 +160,10 @@ def ban_user(discord_id, duration, reason, ldb):
     add_note(discord_id, f'Banned ({ban_date}) for {duration} days - {reason}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return (f'User "{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}" '
-            f'[{discord_id}]) **Banned** and password changed')
+    # [staff member] banned [user] for [duration] days with reason: [reason]
+    return (f'{admin_name} **banned** '
+            f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)} for {duration} days. '
+            f'*Reason*: {reason}')
 
 
 def unban_user(discord_id, admin_name, ldb):
@@ -174,8 +176,8 @@ def unban_user(discord_id, admin_name, ldb):
     add_note(discord_id, f'Unbanned ({current_date}) by {admin_name}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return (f'User "{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}" '
-            f'[@<{discord_id}>]) **Unbanned**')
+    return (f'{admin_name} **unbanned** ' 
+            f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}')
 
 
 def list_users(ldb):

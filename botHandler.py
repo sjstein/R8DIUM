@@ -15,14 +15,15 @@
 # If not, see <https://www.gnu.org/licenses/>.
 ##########################
 import discord
-from discord.ext import commands, tasks   # noqa
-import asyncio    # noqa
+from discord.ext import commands, tasks  # noqa
+import asyncio  # noqa
 import dbAccess
 import msgHandler
 from r8diumInclude import TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT
 
 discord_char_limit = 1900
 tmp_filename = 'user_list.txt'
+
 
 def scrub_id(id_str: str):
     return id_str[2:-1]
@@ -63,16 +64,20 @@ def run_discord_bot(ldb):
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(local_db):
-        if type(local_db) is not list:   # local_db must be empty - showing as NoneType
+        if type(local_db) is not list:  # local_db must be empty - showing as NoneType
             return
-        channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
-        channel = client.get_channel(channel_id)
         for record in local_db:
             if record[dbAccess.banned] == 'True':
                 if not msgHandler.check_ban_status(record[dbAccess.sid], local_db):
+                    channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+                    channel = client.get_channel(channel_id)
+                    channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+                    admin_channel = client.get_channel(channel_id)
+                    msg = f'Automated scan **unbanned** {record[dbAccess.discord_name]} due to ' \
+                          f'time served ({record[dbAccess.ban_duration]} days)'
                     msgHandler.unban_user(record[dbAccess.discord_id], 'Automated check', local_db)
-                    await channel.send(f'**Automated scan** unbanned: [{record[dbAccess.sid]}] '
-                                       f'{record[dbAccess.discord_name]}')
+                    await channel.send(msg)
+                    await admin_channel.send(msg)
 
     @client.tree.command(name='bot_commands', description=f'Show all commands available')
     async def bot_commands(interaction: discord.Interaction):
@@ -170,7 +175,7 @@ def run_discord_bot(ldb):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.ban_user(str(member.id), duration, reason, ldb)
+        response = msgHandler.ban_user(str(member.id), interaction.user.name, duration, reason, ldb)
         # Write a message on the admin channel letting other admins know a user has been banned
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
@@ -222,7 +227,7 @@ def run_discord_bot(ldb):
         response = msgHandler.write_field(str(member.id), field, val, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
-# The following commands are to be opened up to all Discord users who have access to your server
+    # The following commands are to be opened up to all Discord users who have access to your server
     @client.tree.command(name='show_password',
                          description=f'Display your Run8 server password in a message only you can see')
     async def show_password(interaction: discord.Interaction):
