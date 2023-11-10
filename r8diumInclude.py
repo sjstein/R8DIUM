@@ -58,9 +58,11 @@ try:
     CH_LOG = config['discord']['ch_log']
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
+    LOG_SCAN_TIME = config['discord']['log_scan_time']
 
     # Run 8 security configuration xml filename
     SECURITY_FILE = config['run8']['security_file']
+    RUN8_LOG = config['run8']['log_file']
 
 except KeyError as e:
     print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
