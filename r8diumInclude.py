@@ -16,7 +16,7 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'Chelated'
+SOFTWARE_VERSION = 'Discombobulated'
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
 
@@ -59,13 +59,15 @@ try:
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
 
-    # Run 8 security configuration xml filename
-    SECURITY_FILE = config['run8']['security_file']
+    SECURITY_FILE = list()
+    for key, sub_dict in config.items():
+        if key.startswith('server'):
+            SECURITY_FILE.append(sub_dict['security_file'])
 
 except KeyError as e:
     print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
     exit(-1)
 
 except Exception as e:
-    print(f'\nr8dium ({__name__}.py: FATAL exception type unknown - contact devs')
+    print(f'\nr8dium ({__name__}.py): FATAL exception type unknown - contact devs')
     exit(-1)
