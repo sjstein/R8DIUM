@@ -44,8 +44,6 @@ try:
               'Please see STATS-OPT-IN.md for details on how to proceed.')
         exit(-1)
 
-    R8SERVER_ADDR = config['local']['r8server_addr']
-    R8SERVER_PORT = config['local']['r8server_port']
 
     DB_FILENAME = USER_DB + '.csv'
     LOG_FILENAME = LOG_FILE + '.log'
@@ -59,10 +57,17 @@ try:
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
 
+    R8SERVER_NAME = list()
     SECURITY_FILE = list()
+    R8SERVER_ADDR = list()
+    R8SERVER_PORT = list()
     for key, sub_dict in config.items():
         if key.startswith('server'):
             SECURITY_FILE.append(sub_dict['security_file'])
+            R8SERVER_ADDR.append(sub_dict['r8server_addr'])
+            R8SERVER_PORT.append(sub_dict['r8server_port'])
+            R8SERVER_NAME.append(sub_dict['name'])
+
 
 except KeyError as e:
     print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
