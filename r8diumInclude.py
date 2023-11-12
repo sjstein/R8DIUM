@@ -56,6 +56,7 @@ try:
     CH_LOG = config['discord']['ch_log']
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
+    LOG_SCAN_TIME = config['discord']['log_scan_time']
 
     R8SERVER_NAME = list()
     SECURITY_FILE = list()
@@ -67,6 +68,7 @@ try:
             R8SERVER_ADDR.append(sub_dict['r8server_addr'])
             R8SERVER_PORT.append(sub_dict['r8server_port'])
             R8SERVER_NAME.append(sub_dict['name'])
+
 
 
 except KeyError as e:

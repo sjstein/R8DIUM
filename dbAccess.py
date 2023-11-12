@@ -46,6 +46,8 @@ uid = 'uid'  # str
 role = 'role'  # str
 password = 'password'  # str
 join_date = 'join_date'  # str
+last_login = 'last_login'   # str
+active = 'active'  # bool
 ip = 'ip'  # str
 banned = 'banned'  # bool
 ban_date = 'ban_date'  # str
@@ -60,6 +62,8 @@ db_field_list = [sid,
                  role,
                  password,
                  join_date,
+                 last_login,
+                 active,
                  ip,
                  banned,
                  ban_date,
