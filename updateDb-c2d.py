@@ -18,14 +18,14 @@ for line in ifp.readlines():
     if line.find('discord_name,discord_id') > 0:
         if line.find(',last_login') < 0:     # Header hasn't been modified
             ins_pt = line.find(',ip')
-            new_header = line[:ins_pt] + ',last_login' + line[ins_pt:]
+            new_header = line[:ins_pt] + ',last_login,active' + line[ins_pt:]
             ofp.write(new_header)
         else:
             print('found first line has already been updated')
             ofp.write(line)
     else:
         if line.count(',') == 12:
-            # This is an old format, so update by adding another field
+            # This is an old format, so update by adding two new fields (last_login, active?)
             cpos = 0
             cfnd = 0
             for char in line:
@@ -34,8 +34,8 @@ for line in ifp.readlines():
                 cpos += 1
                 if cfnd == 8:
                     cloc = cpos
-            # insert another comma
-            new_line = line[:cloc] + ',' + line[cloc:]
+            # insert two new fields - blank for last_login, and True for active
+            new_line = line[:cloc] + ',True,' + line[cloc:]
             ofp.write(new_line)
 
 ofp.close()

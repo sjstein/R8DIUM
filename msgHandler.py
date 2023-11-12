@@ -106,6 +106,7 @@ def add_user(discord_id, discord_name, ldb):
     join_date = datetime.date.today().strftime('%#m/%#d/%y')
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, password, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
+    dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.active, True, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
