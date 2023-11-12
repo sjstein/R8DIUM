@@ -21,7 +21,7 @@ import asyncio  # noqa
 import dbAccess
 import msgHandler
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
-                           DB_FILENAME, LOG_SCAN_TIME, RUN8_LOG)
+                           R8SERVER_NAME, DB_FILENAME, LOG_SCAN_TIME, RUN8_LOG)
 
 discord_char_limit = 1900
 tmp_filename = 'user_list.txt'  # File to hold long user list for sending to Discord (avoiding character limit)
@@ -288,7 +288,15 @@ def run_discord_bot(ldb):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = f'Run 8 server address: *{R8SERVER_ADDR}*\nRun 8 server port: *{R8SERVER_PORT}*'
+        i = 0
+        response = ''
+        for server in R8SERVER_NAME:
+            if i > 0:
+                response += '----------------\n'
+            response += (f'Server info for : **{server}** \n'
+                        f'* address: **{R8SERVER_ADDR[i]}**\n'
+                        f'* port:    **{R8SERVER_PORT[i]}**\n')
+            i += 1
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     client.run(TOKEN)
