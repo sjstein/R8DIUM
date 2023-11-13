@@ -16,7 +16,7 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'Discombobulated'
+SOFTWARE_VERSION = 'Excommunicated'
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
 
@@ -57,6 +57,7 @@ try:
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
     LOG_SCAN_TIME = config['discord']['log_scan_time']
+    EXP_SCAN_TIME = config['discord']['expire_scan_time']
     INACT_DAYS = config['discord']['inactive_days_threshold']
 
     R8SERVER_NAME = list()

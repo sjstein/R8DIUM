@@ -21,7 +21,7 @@ import asyncio  # noqa
 import dbAccess
 import msgHandler
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
-                           R8SERVER_NAME, R8SERVER_LOG, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS)
+                           R8SERVER_NAME, R8SERVER_LOG, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME)
 
 discord_char_limit = 1900
 tmp_filename = 'user_list.txt'  # File to hold long user list for sending to Discord (avoiding character limit)
@@ -62,9 +62,10 @@ def run_discord_bot(ldb):
         print(f'Starting log-in periodic checks')
         msgHandler.write_log_file(f'Starting log-in periodic checks')
         scan_logins.start(ldb)
-        print(f'Starting expired user checks')
-        msgHandler.write_log_file(f'Starting expired user checks')
-        expire_users.start(ldb)
+        if int(INACT_DAYS) > 0:  # Not all server admins want to auto-expire users
+            print(f'Starting expired user checks')
+            msgHandler.write_log_file(f'Starting expired user checks')
+            expire_users.start(ldb)
 
         dbAccess.send_statistics(ldb)
 
@@ -99,7 +100,7 @@ def run_discord_bot(ldb):
                             dbAccess.set_element(pw, dbAccess.password, dbAccess.ip, ip, ldb)
                             dbAccess.set_element(pw, dbAccess.password, dbAccess.run8_name, name, ldb)
                             print(f'Updating login info for '
-                                  f'{dbAccess.get_element(pw, dbAccess.password, dbAccess.discord_name, ldb)} from'
+                                  f'{dbAccess.get_element(pw, dbAccess.password, dbAccess.discord_name, ldb)} from '
                                   f'file {log_file}')
                             write_db = True
             if write_db:
@@ -107,18 +108,27 @@ def run_discord_bot(ldb):
             fp.close()
         return
 
-    @tasks.loop(seconds=int(LOG_SCAN_TIME))
+    @tasks.loop(minutes=int(EXP_SCAN_TIME))
     async def expire_users(ldb):
-        print("checking expired users")
         today = datetime.datetime.today()
         today_str = datetime.datetime.strftime(today, '%m/%d/%y')
         for i in range(1, len(ldb)):
-            last_active = dbAccess.get_element(i, dbAccess.sid, dbAccess.last_login, ldb)
+            discord_id = dbAccess.get_element(i, dbAccess.sid, dbAccess.discord_id, ldb)
+            last_active = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.last_login, ldb)
             if last_active == '':
                 last_active = today_str
             diff = (today - datetime.datetime.strptime(last_active, '%m/%d/%y')).days
-            if diff > int(INACT_DAYS):
-                msgHandler.expire_user(i, today_str, ldb)
+            if diff > int(INACT_DAYS) and \
+                    dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.active, ldb) != 'False':
+                channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+                channel = client.get_channel(channel_id)
+                channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+                admin_channel = client.get_channel(channel_id)
+                discord_name = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)
+                msg = f'Automated scan set user {discord_name} to INACTIVE; last login : {last_active}'
+                await channel.send(msg)
+                await admin_channel.send(msg)
+                msgHandler.expire_user(discord_id, today_str, ldb)
         return
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
@@ -234,10 +244,13 @@ def run_discord_bot(ldb):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.ban_user(str(member.id), interaction.user.name, duration, reason, ldb)
-        # Write a message on the admin channel letting other admins know a user has been banned
-        admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
-        await admin_channel.send(response)
+        if dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.banned, ldb) != 'True':
+            response = msgHandler.ban_user(str(member.id), interaction.user.name, duration, reason, ldb)
+            # Write a message on the admin channel letting other admins know a user has been banned
+            admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
+            await admin_channel.send(response)
+        else:
+            response = f'*{member.name}* **is already banned** - ignoring request'
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='unban_user',
@@ -247,10 +260,29 @@ def run_discord_bot(ldb):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.unban_user(str(member.id), interaction.user.name, ldb)
-        # Write a message to the admin channel letting other admins know a user has been un-banned
-        admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
-        await admin_channel.send(response)
+        if dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.banned, ldb) != 'False':
+            response = msgHandler.unban_user(str(member.id), interaction.user.name, ldb)
+            # Write a message to the admin channel letting other admins know a user has been un-banned
+            admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
+            await admin_channel.send(response)
+        else:
+            response = f'*{member.name}* is **not currently banned** - ignoring request'
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
+
+    @client.tree.command(name='reactivate_user',
+                         description=f'reactivate user @id')
+    @app_commands.describe(member='@id')
+    async def reactivate_user(interaction: discord.Interaction, member: discord.Member):
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        if dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.active, ldb) != 'True':
+            response = msgHandler.activate_user(str(member.id), interaction.user.name, ldb)
+            # Write a message to the admin channel letting other admins know a user has been un-banned
+            admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
+            await admin_channel.send(response)
+        else:
+            response = f'*{member.name}* is **already active** - ignoring request'
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='generate_pass',
