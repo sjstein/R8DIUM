@@ -57,17 +57,21 @@ try:
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
     LOG_SCAN_TIME = config['discord']['log_scan_time']
+    INACT_DAYS = config['discord']['inactive_days_threshold']
 
     R8SERVER_NAME = list()
     SECURITY_FILE = list()
     R8SERVER_ADDR = list()
     R8SERVER_PORT = list()
+    R8SERVER_LOG = list()
     for key, sub_dict in config.items():
         if key.startswith('server'):
             SECURITY_FILE.append(sub_dict['security_file'])
             R8SERVER_ADDR.append(sub_dict['r8server_addr'])
             R8SERVER_PORT.append(sub_dict['r8server_port'])
             R8SERVER_NAME.append(sub_dict['name'])
+            R8SERVER_LOG.append(sub_dict['log_file'])
+
 
 
 

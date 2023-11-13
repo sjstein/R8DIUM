@@ -21,7 +21,7 @@ import asyncio  # noqa
 import dbAccess
 import msgHandler
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
-                           R8SERVER_NAME, DB_FILENAME, LOG_SCAN_TIME, RUN8_LOG)
+                           R8SERVER_NAME, R8SERVER_LOG, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS)
 
 discord_char_limit = 1900
 tmp_filename = 'user_list.txt'  # File to hold long user list for sending to Discord (avoiding character limit)
@@ -59,40 +59,66 @@ def run_discord_bot(ldb):
         print(f'Starting banned user periodic checks')
         msgHandler.write_log_file(f'Starting banned user periodic checks')
         scan_banned_users.start(ldb)
+        print(f'Starting log-in periodic checks')
+        msgHandler.write_log_file(f'Starting log-in periodic checks')
         scan_logins.start(ldb)
+        print(f'Starting expired user checks')
+        msgHandler.write_log_file(f'Starting expired user checks')
+        expire_users.start(ldb)
+
+        dbAccess.send_statistics(ldb)
 
     @tasks.loop(seconds=int(LOG_SCAN_TIME))
     async def scan_logins(ldb):
-        write_db = False
-        fp = open(RUN8_LOG, 'r')
-        for line in fp.readlines():
-            if 'Name' in line and 'PW:' in line:  # This is a log in status message
-                lft_line = line.split(',')[0]  # Chunk up the line into useful parts
-                rt_line = line.split(',')[1]  # Very fragile due to the dependency on the log file format
-                raw_date = lft_line.split(' ')[
-                    0]  # This date shows up as YYYY-MM-DD which is different than how we store
-                date = datetime.datetime.strptime(raw_date, '%Y-%m-%d').strftime('%#m/%#d/%y')
-                time = lft_line.split(' ')[1]
-                name = rt_line.split('Name:')[1].split('  PW:')[0]
-                pw = rt_line.split('PW:')[1].split('  UID:')[0]
-                uid = rt_line.split('UID:')[1].split('  IP:')[0]
-                ip = rt_line.split('::ffff:')[1].split(']:')[0]
-                #          print(f'{date} : {time} : {name} : {pw} : {uid} : {ip}')
-                last_login = dbAccess.get_element(pw, dbAccess.password, dbAccess.last_login, ldb)
-                if last_login == '':
-                    last_login = '1/1/00'
-                # What to do if the password isn't found? Possible if the user changed pass in-between scans
-                # For now, just ignoring. Should eventually sync up
-                if last_login != -1:
-                    log_date = datetime.datetime.strptime(date, '%m/%d/%y')
-                    last_date = datetime.datetime.strptime(last_login, '%m/%d/%y')
-                    if (log_date - last_date).days > 0:
-                        dbAccess.set_element(pw, dbAccess.password, dbAccess.last_login, date, ldb)
-                        dbAccess.set_element(pw, dbAccess.password, dbAccess.ip, ip, ldb)
-                        write_db = True
-        if write_db:
-            dbAccess.save_db(DB_FILENAME, ldb)
-        fp.close()
+        for log_file in R8SERVER_LOG:
+            write_db = False
+            fp = open(log_file, 'r')
+            for line in fp.readlines():
+                if 'Name' in line and 'PW:' in line:  # This is a log in status message
+                    lft_line = line.split(',')[0]  # Chunk up the line into useful parts
+                    rt_line = line.split(',')[1]  # Very fragile due to the dependency on the log file format
+                    raw_date = lft_line.split(' ')[
+                        0]  # This date shows up as YYYY-MM-DD which is different than how we store
+                    date = datetime.datetime.strptime(raw_date, '%Y-%m-%d').strftime('%#m/%#d/%y')
+                    time = lft_line.split(' ')[1]
+                    name = rt_line.split('Name:')[1].split('  PW:')[0]
+                    pw = rt_line.split('PW:')[1].split('  UID:')[0]
+                    uid = rt_line.split('UID:')[1].split('  IP:')[0]
+                    ip = rt_line.split('::ffff:')[1].split(']:')[0]
+                    #          print(f'{date} : {time} : {name} : {pw} : {uid} : {ip}')
+                    last_login = dbAccess.get_element(pw, dbAccess.password, dbAccess.last_login, ldb)
+                    if last_login == '':
+                        last_login = '1/1/00'
+                    # What to do if the password isn't found? Possible if the user changed pass in-between scans
+                    # For now, just ignoring. Should eventually sync up
+                    if last_login != -1:
+                        log_date = datetime.datetime.strptime(date, '%m/%d/%y')
+                        last_date = datetime.datetime.strptime(last_login, '%m/%d/%y')
+                        if (log_date - last_date).days > 0:
+                            dbAccess.set_element(pw, dbAccess.password, dbAccess.last_login, date, ldb)
+                            dbAccess.set_element(pw, dbAccess.password, dbAccess.ip, ip, ldb)
+                            dbAccess.set_element(pw, dbAccess.password, dbAccess.run8_name, name, ldb)
+                            print(f'Updating login info for '
+                                  f'{dbAccess.get_element(pw, dbAccess.password, dbAccess.discord_name, ldb)} from'
+                                  f'file {log_file}')
+                            write_db = True
+            if write_db:
+                dbAccess.save_db(DB_FILENAME, ldb)
+            fp.close()
+        return
+
+    @tasks.loop(seconds=int(LOG_SCAN_TIME))
+    async def expire_users(ldb):
+        print("checking expired users")
+        today = datetime.datetime.today()
+        today_str = datetime.datetime.strftime(today, '%m/%d/%y')
+        for i in range(1, len(ldb)):
+            last_active = dbAccess.get_element(i, dbAccess.sid, dbAccess.last_login, ldb)
+            if last_active == '':
+                last_active = today_str
+            diff = (today - datetime.datetime.strptime(last_active, '%m/%d/%y')).days
+            if diff > int(INACT_DAYS):
+                msgHandler.expire_user(i, today_str, ldb)
         return
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
@@ -294,8 +320,8 @@ def run_discord_bot(ldb):
             if i > 0:
                 response += '----------------\n'
             response += (f'Server info for : **{server}** \n'
-                        f'* address: **{R8SERVER_ADDR[i]}**\n'
-                        f'* port:    **{R8SERVER_PORT[i]}**\n')
+                         f'* address: **{R8SERVER_ADDR[i]}**\n'
+                         f'* port:    **{R8SERVER_PORT[i]}**\n')
             i += 1
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 

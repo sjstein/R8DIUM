@@ -106,6 +106,7 @@ def add_user(discord_id, discord_name, ldb):
     join_date = datetime.date.today().strftime('%#m/%#d/%y')
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, password, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
+    dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.last_login, join_date, ldb)    # populate last_login
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.active, True, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
@@ -146,6 +147,18 @@ def add_role(discord_id, role, ldb):
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.role, str(role), ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     return f'Role: "{role}" given to user: {dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}'
+
+
+def expire_user(discord_id, exp_date, ldb):
+    if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
+        return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, False, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password,
+                         generate_password(random.randint(15, 25)), ldb)
+    add_note(discord_id, f'Expired due to inactivity on {exp_date}', ldb)
+    dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
+    return
 
 
 def ban_user(discord_id, admin_name, duration, reason, ldb):
