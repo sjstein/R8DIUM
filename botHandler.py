@@ -112,10 +112,10 @@ def run_discord_bot(ldb):
     async def expire_users(ldb):
         today = datetime.datetime.today()
         today_str = datetime.datetime.strftime(today, '%m/%d/%y')
-        for i in range(1, len(ldb)):
-            discord_id = dbAccess.get_element(i, dbAccess.sid, dbAccess.discord_id, ldb)
+        for line in ldb:
+            discord_id = line['discord_id']
             last_active = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.last_login, ldb)
-            if last_active == '':
+            if last_active == '':   # Handling a blank last_active by comparing to today's date
                 last_active = today_str
             diff = (today - datetime.datetime.strptime(last_active, '%m/%d/%y')).days
             if diff > int(INACT_DAYS) and \
