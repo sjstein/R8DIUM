@@ -44,7 +44,8 @@ try:
               'Please see STATS-OPT-IN.md for details on how to proceed.')
         exit(-1)
 
-
+    # Stop-gap addition to fix branch 105
+    RUN8_LOG = config['run8']['log_file']
     DB_FILENAME = USER_DB + '.csv'
     LOG_FILENAME = LOG_FILE + '.log'
 
