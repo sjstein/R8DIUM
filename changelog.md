@@ -23,12 +23,13 @@ over the new database to the original filename** - a backup of your original dat
 2. Under the [discord] category
    - inactive_days_threshold [Number of days between logins required to elapse for a user to be considered inactive]
    - expire_scan_time [Number of **minutes** between each check for expired users]
-
+   - UID_purge_timer [Time in seconds to regularly check and purge UIDs from HostSecurity file]
 
 **Also addressed** :
 1. Added a new bot function `/reactivate_user <username>` to allow staff members the ability to reinstate an expired user
 2. Cleaned up the `/ban_user` and `/unban_user` functions to disallow banning or unbanning users already in those states
-
+3. Added option to routinely remove UID entries from HostSecurity file(s) as a stop-gap way of eliminating the need
+for users who have changing UIDs from having to frequently run `/refresh_pass`
 ------------------------------
 ### 11-Nov-2023 [Discombobulated]
 
