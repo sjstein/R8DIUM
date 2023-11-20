@@ -109,7 +109,8 @@ def save_db(filename: str, ldb: list) -> int:
 def send_statistics(ldb: list):
     if SEND_STATS:
         # Create unique hashed server id
-        server_mac_addr = ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)])
+        server_mac_addr = (
+            ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)]))
         server_id = hashlib.md5((server_mac_addr + SECURITY_FILE[0]).encode()).hexdigest()
 
         header_dict = {'Authorization': STAT_TOKEN}
@@ -118,7 +119,7 @@ def send_statistics(ldb: list):
     return
 
 
-def write_security_file(ldb: list):
+def write_security_file(ldb: list, purge_uids=False):
     # First we merge in the Run8 XML security file to capture any changes before overwriting
     merge_security_file(ldb)
 
@@ -128,13 +129,17 @@ def write_security_file(ldb: list):
     ban_list = xml_dict[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
     usr_list = xml_dict[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
     for record in ldb:
+        if purge_uids:
+            l_uid = None
+        else:
+            l_uid = record[uid]
         if record[banned] == 'True':
             ban_list.append({XML_NAME: record[run8_name],
-                             XML_UID: record[uid],
+                             XML_UID: l_uid,
                              XML_IP: record[ip]})
         elif record[banned] == 'False' and record[password] != '':  # Don't save users without pw
             usr_list.append({XML_NAME: record[run8_name],
-                             XML_UID: record[uid],
+                             XML_UID: l_uid,
                              XML_PASSWORD: record[password]})
     xml_out = xmltodict.unparse(xml_dict, pretty=True)
 

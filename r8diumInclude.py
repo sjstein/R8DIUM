@@ -39,11 +39,11 @@ try:
         print('**WARNING**\nIt appears that you have entered a stat_token, but not opted in to statistics sharing!\n'
               'Please check your configuration file for errors. See the file STATS-OPT-IN for details.')
     if SEND_STATS and (STAT_TOKEN == '' or STAT_TOKEN == '[insert STAT token]'):
-        print('**WARNING**\nYou have opted in to share statistics with the developers - thanks!\nHowever it appears you have yet to '
+        print('**WARNING**\nYou have opted in to share statistics with the developers - thanks!\n'
+              'However it appears you have yet to '
               'obtain and/or enter your secure token in the configuration file.\n'
               'Please see STATS-OPT-IN.md for details on how to proceed.')
         exit(-1)
-
 
     DB_FILENAME = USER_DB + '.csv'
     LOG_FILENAME = LOG_FILE + '.log'
@@ -59,6 +59,7 @@ try:
     LOG_SCAN_TIME = config['discord']['log_scan_time']
     EXP_SCAN_TIME = config['discord']['expire_scan_time']
     INACT_DAYS = config['discord']['inactive_days_threshold']
+    UID_PURGE_TIME = config['discord']['UID_purge_timer']
 
     R8SERVER_NAME = list()
     SECURITY_FILE = list()

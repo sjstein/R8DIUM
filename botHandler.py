@@ -20,10 +20,14 @@ from discord.ext import commands, tasks  # noqa
 import asyncio  # noqa
 import dbAccess
 import msgHandler
+import pathlib
+import r8diumInclude
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
-                           R8SERVER_NAME, R8SERVER_LOG, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME)
+                           R8SERVER_NAME, R8SERVER_LOG, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME,
+                           UID_PURGE_TIME)
 
 discord_char_limit = 1900
+hsf_mtime = {}
 tmp_filename = 'user_list.txt'  # File to hold long user list for sending to Discord (avoiding character limit)
 
 
@@ -46,7 +50,11 @@ def run_discord_bot(ldb):
 
     @client.event
     async def on_ready():
-        print(f'Discord bot [{client.user}] is now running')
+        print(f'Discord bot [{client.user}] is starting')
+        # Populate the dict with current host file modification timestamps
+        for filename in r8diumInclude.SECURITY_FILE:
+            hsf_mtime[filename] = pathlib.Path(filename).stat().st_mtime
+
         msgHandler.write_log_file(f'------------------')
         msgHandler.write_log_file(f'R8DIUM [{SOFTWARE_VERSION}] starting')
         msgHandler.write_log_file(f'Discord bot [{client.user}] is now running')
@@ -66,7 +74,10 @@ def run_discord_bot(ldb):
             print(f'Starting expired user checks')
             msgHandler.write_log_file(f'Starting expired user checks')
             expire_users.start(ldb)
-
+        if int(UID_PURGE_TIME) > 0:  # Not all server admins want to purge UIDs from HostSecurity file
+            print(f'Starting UID purge daemon')
+            msgHandler.write_log_file(f'Starting UID purge daemon')
+            clean_uids.start(ldb)
         dbAccess.send_statistics(ldb)
 
     @tasks.loop(seconds=int(LOG_SCAN_TIME))
@@ -99,9 +110,10 @@ def run_discord_bot(ldb):
                             dbAccess.set_element(pw, dbAccess.password, dbAccess.last_login, date, ldb)
                             dbAccess.set_element(pw, dbAccess.password, dbAccess.ip, ip, ldb)
                             dbAccess.set_element(pw, dbAccess.password, dbAccess.run8_name, name, ldb)
-                            print(f'Updating login info for '
-                                  f'{dbAccess.get_element(pw, dbAccess.password, dbAccess.discord_name, ldb)} from '
-                                  f'file {log_file}')
+                            msg = f'Updating login info for ' \
+                                  f'{dbAccess.get_element(pw, dbAccess.password, dbAccess.discord_name, ldb)} from ' \
+                                  f'file {log_file}'
+                            msgHandler.write_log_file(msg)
                             write_db = True
             if write_db:
                 dbAccess.save_db(DB_FILENAME, ldb)
@@ -126,10 +138,23 @@ def run_discord_bot(ldb):
                 admin_channel = client.get_channel(channel_id)
                 discord_name = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)
                 msg = f'Automated scan set user {discord_name} to INACTIVE; last login : {last_active}'
+                msgHandler.write_log_file(msg)
                 await channel.send(msg)
                 await admin_channel.send(msg)
                 msgHandler.expire_user(discord_id, today_str, ldb)
         return
+
+    @tasks.loop(seconds=int(UID_PURGE_TIME))
+    async def clean_uids(local_db):
+        for filename in r8diumInclude.SECURITY_FILE:
+            current_mtime = pathlib.Path.stat(filename).st_mtime
+            if current_mtime != hsf_mtime[filename]:
+                print(f'clean_uid daemon: purging HostSecurity file(s) of UIDs')
+                msgHandler.write_log_file(f'clean_uid daemon: purging HostSecurity file(s) of UIDs')
+                dbAccess.write_security_file(local_db, purge_uids=True)
+                for key in hsf_mtime:
+                    hsf_mtime[key] = pathlib.Path.stat(filename).st_mtime
+                break
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
     async def scan_banned_users(local_db):
@@ -144,6 +169,7 @@ def run_discord_bot(ldb):
                     admin_channel = client.get_channel(channel_id)
                     msg = f'Automated scan **unbanned** {record[dbAccess.discord_name]} due to ' \
                           f'time served ({record[dbAccess.ban_duration]} days)'
+                    msgHandler.write_log_file(msg)
                     msgHandler.unban_user(record[dbAccess.discord_id], 'Automated check', local_db)
                     await channel.send(msg)
                     await admin_channel.send(msg)
