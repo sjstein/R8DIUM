@@ -1,6 +1,6 @@
 # R8DIUM Changelog
 
-### 13-Nov-2023 [Excommunicated]
+### 20-Nov-2023 [Excommunicated]
 
 **Version Update** : "Excommunicated"
 
