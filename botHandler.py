@@ -88,15 +88,21 @@ def run_discord_bot(ldb):
             for line in fp.readlines():
                 if 'Name' in line and 'PW:' in line:  # This is a log in status message
                     lft_line = line.split(',')[0]  # Chunk up the line into useful parts
-                    rt_line = line.split(',')[1]  # Very fragile due to the dependency on the log file format
+                    rt_line = line.split(',', 1)[1]  # Very fragile due to the dependency on the log file format
+                    print(f'Left : {lft_line}')
+                    print(f'Right: {rt_line}')
                     raw_date = lft_line.split(' ')[
                         0]  # This date shows up as YYYY-MM-DD which is different than how we store
                     date = datetime.datetime.strptime(raw_date, '%Y-%m-%d').strftime('%#m/%#d/%y')
                     time = lft_line.split(' ')[1]
                     name = rt_line.split('Name:')[1].split('  PW:')[0]
+                    print(f'{name}')
                     pw = rt_line.split('PW:')[1].split('  UID:')[0]
+                    print(f'{pw}')
                     uid = rt_line.split('UID:')[1].split('  IP:')[0]
+                    print(f'{uid}')
                     ip = rt_line.split('::ffff:')[1].split(']:')[0]
+                    print(f'{ip}')
                     #          print(f'{date} : {time} : {name} : {pw} : {uid} : {ip}')
                     last_login = dbAccess.get_element(pw, dbAccess.password, dbAccess.last_login, ldb)
                     if last_login == '':
@@ -241,10 +247,10 @@ def run_discord_bot(ldb):
         response = msgHandler.add_user(str(member.id), discord_name, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
-    @client.tree.command(name='change_roll',
+    @client.tree.command(name='change_role',
                          description=f'Set role <role_str> to user @id')
     @app_commands.describe(member='@id', role='role name')
-    async def change_roll(interaction: discord.Interaction, member: discord.Member, role: str):
+    async def change_role(interaction: discord.Interaction, member: discord.Member, role: str):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
