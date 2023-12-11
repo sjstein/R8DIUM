@@ -46,6 +46,8 @@ uid = 'uid'  # str
 role = 'role'  # str
 password = 'password'  # str
 join_date = 'join_date'  # str
+last_login = 'last_login'   # str
+active = 'active'  # bool
 ip = 'ip'  # str
 banned = 'banned'  # bool
 ban_date = 'ban_date'  # str
@@ -60,6 +62,8 @@ db_field_list = [sid,
                  role,
                  password,
                  join_date,
+                 last_login,
+                 active,
                  ip,
                  banned,
                  ban_date,
@@ -105,8 +109,9 @@ def save_db(filename: str, ldb: list) -> int:
 def send_statistics(ldb: list):
     if SEND_STATS:
         # Create unique hashed server id
-        server_mac_addr = ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)])
-        server_id = hashlib.md5((server_mac_addr + SECURITY_FILE).encode()).hexdigest()
+        server_mac_addr = (
+            ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)]))
+        server_id = hashlib.md5((server_mac_addr + SECURITY_FILE[0]).encode()).hexdigest()
 
         header_dict = {'Authorization': STAT_TOKEN}
         put_dict = {'a': server_id, 'b': SOFTWARE_VERSION, 'c': len(ldb)}
@@ -114,7 +119,7 @@ def send_statistics(ldb: list):
     return
 
 
-def write_security_file(ldb: list):
+def write_security_file(ldb: list, purge_uids=False):
     # First we merge in the Run8 XML security file to capture any changes before overwriting
     merge_security_file(ldb)
 
@@ -124,20 +129,25 @@ def write_security_file(ldb: list):
     ban_list = xml_dict[XML_ROOT_NAME][XML_BANNED_CATEGORY_NAME][XML_BANNED_NAME]
     usr_list = xml_dict[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]
     for record in ldb:
+        if purge_uids:
+            l_uid = None
+        else:
+            l_uid = record[uid]
         if record[banned] == 'True':
             ban_list.append({XML_NAME: record[run8_name],
-                             XML_UID: record[uid],
+                             XML_UID: l_uid,
                              XML_IP: record[ip]})
         elif record[banned] == 'False' and record[password] != '':  # Don't save users without pw
             usr_list.append({XML_NAME: record[run8_name],
-                             XML_UID: record[uid],
+                             XML_UID: l_uid,
                              XML_PASSWORD: record[password]})
     xml_out = xmltodict.unparse(xml_dict, pretty=True)
 
     try:
-        wp = open(SECURITY_FILE, 'w')
-        wp.write(xml_out)
-        wp.close()
+        for fname in SECURITY_FILE:
+            wp = open(fname, 'w')
+            wp.write(xml_out)
+            wp.close()
         return 'file written'
 
     except Exception as e:
@@ -146,85 +156,86 @@ def write_security_file(ldb: list):
 
 
 def merge_security_file(ldb: list):
-    try:
-        # Read current HostSecurity file and update UID fields based on password (gross)
-        fp = open(SECURITY_FILE, 'r')
-        xml_in = xmltodict.parse(fp.read(), process_namespaces=True)
-        fp.close()
+    for fname in SECURITY_FILE:
+        try:
+            # Read current HostSecurity file and update UID fields based on password (gross)
+            fp = open(fname, 'r')
+            xml_in = xmltodict.parse(fp.read(), process_namespaces=True)
+            fp.close()
 
-    except FileNotFoundError as e:
-        print(f'\nr8dium ({__name__}.py): FATAL exception -> {e}')
-        exit(-1)
+        except FileNotFoundError as e:
+            print(f'\nr8dium ({__name__}.py): FATAL exception -> {e}')
+            exit(-1)
 
-    except Exception as e:
-        print(f'\nr8dium ({__name__}.py: FATAL exception in merge_security_file, type unknown - contact devs')
-        exit(-1)
+        except Exception as e:
+            print(f'\nr8dium ({__name__}.py: FATAL exception in merge_security_file, type unknown - contact devs')
+            exit(-1)
 
-    update_flag = False
-    retstr = '`Merge results:\n-------------\n'
+        update_flag = False
+        retstr = '`Merge results:\n-------------\n'
 
-    if type(xml_in[XML_ROOT_NAME]) is not dict:
-        # No entries in XML, just return
-        return f'File merge error : No category names found'
+        if type(xml_in[XML_ROOT_NAME]) is not dict:
+            # No entries in XML, just return
+            return f'File merge error : No category names found'
 
-    if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME]) is not dict:
-        # No user entries in XML, just return
-        return f'File merge error : No names found'
+        if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME]) is not dict:
+            # No user entries in XML, just return
+            return f'File merge error : No names found'
 
-    if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]) is dict:
-        # Edge case to take of a single entry for XML-UNIQUE_NAME, just return and allow complete rewrite
-        return f'File merge error : only one {XML_UNIQUE_NAME} entry found'
+        if type(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME]) is dict:
+            # Edge case to take of a single entry for XML-UNIQUE_NAME, just return and allow complete rewrite
+            return f'File merge error : only one {XML_UNIQUE_NAME} entry found'
 
-    for record in range(0, len(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME])):
-        retstr += f'{record : 03d}: '
-        new_sid = get_element(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_PASSWORD],
-                              password, sid, ldb)
-        if new_sid != -1:  # Found xml password in database
-            current_uid = get_element(new_sid, sid, uid, ldb)
-            # When run8 devs finally decide to capture the name, uncomment below
-            # new_r8name = ''
-            new_uid = ''
-            if current_uid == '' or current_uid.lower() == 'none':  # No UID in database, so populate with XML version
-                try:
-                    new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
-                    # When run8 devs finally decide to capture the name, uncomment below
-                    # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
-                    update_flag = True
-                    # When run8 devs finally decide to capture the name, uncomment below and remove following line
-                    # retstr += f'added UID[{new_uid}] and R8_name [{new_r8name}] ' \
-                    #           f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
-                    retstr += f'added UID[{new_uid}] ' \
-                              f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
-
-                except KeyError:
-                    retstr += f'Found password but no UID (in XML) for ' \
-                              f'SID[{new_sid}]\n'
-            else:   # UID found in XML
-                try:
-                    new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
-                    # When run8 devs finally decide to capture the name, uncomment below
-                    # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
-                    if new_uid != current_uid:
-                        # db and xml do not match, what to do? Just notify user for now
-                        # Maybe we should start keeping a list of these UIDs? (ala Notes)
-                        retstr += f'Existing UID mismatch for SID[{new_sid}]:\n'
-                        retstr += f' database file UID: {current_uid}\n'
-                        retstr += f' host_security UID: {new_uid}\n'
-                        retstr += (f'Database file NOT updated for this record\n'
-                                   f'-----------------------------------------')
-                    else:
-                        retstr += f'Existing UID valid for SID[{new_sid}]\n'
-                except KeyError:
-                    retstr += f'Found password but no UID (in XML) for SID {new_sid}'
-            if update_flag:
+        for record in range(0, len(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME])):
+            retstr += f'{record : 03d}: '
+            new_sid = get_element(xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_PASSWORD],
+                                  password, sid, ldb)
+            if new_sid != -1:  # Found xml password in database
+                current_uid = get_element(new_sid, sid, uid, ldb)
                 # When run8 devs finally decide to capture the name, uncomment below
-                # set_element(new_sid, sid, run8_name, new_r8name, ldb)  # Updating this for no real reason atm
-                set_element(new_sid, sid, uid, new_uid, ldb)
-                save_db(DB_FILENAME, ldb)
-        else:
-            retstr += f'Password '
-            retstr += f'[{xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_PASSWORD]}]'
-            retstr += ' not found\n'
+                # new_r8name = ''
+                new_uid = ''
+                if current_uid == '' or current_uid.lower() == 'none':  # No UID in database, so populate with XML version
+                    try:
+                        new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
+                        # When run8 devs finally decide to capture the name, uncomment below
+                        # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
+                        update_flag = True
+                        # When run8 devs finally decide to capture the name, uncomment below and remove following line
+                        # retstr += f'added UID[{new_uid}] and R8_name [{new_r8name}] ' \
+                        #           f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
+                        retstr += f'added UID[{new_uid}] ' \
+                                  f'to SID[{new_sid}]  ({get_element(new_sid, sid, discord_name, ldb)})\n'
+
+                    except KeyError:
+                        retstr += f'Found password but no UID (in XML) for ' \
+                                  f'SID[{new_sid}]\n'
+                else:   # UID found in XML
+                    try:
+                        new_uid = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_UID]
+                        # When run8 devs finally decide to capture the name, uncomment below
+                        # new_r8name = xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_NAME]
+                        if new_uid != current_uid:
+                            # db and xml do not match, what to do? Just notify user for now
+                            # Maybe we should start keeping a list of these UIDs? (ala Notes)
+                            retstr += f'Existing UID mismatch for SID[{new_sid}]:\n'
+                            retstr += f' database file UID: {current_uid}\n'
+                            retstr += f' host_security UID: {new_uid}\n'
+                            retstr += (f'Database file NOT updated for this record\n'
+                                       f'-----------------------------------------')
+                        else:
+                            retstr += f'Existing UID valid for SID[{new_sid}]\n'
+                    except KeyError:
+                        retstr += f'Found password but no UID (in XML) for SID {new_sid}'
+                if update_flag:
+                    # When run8 devs finally decide to capture the name, uncomment below
+                    # set_element(new_sid, sid, run8_name, new_r8name, ldb)  # Updating this for no real reason atm
+                    set_element(new_sid, sid, uid, new_uid, ldb)
+                    save_db(DB_FILENAME, ldb)
+            else:
+                retstr += f'Password '
+                retstr += f'[{xml_in[XML_ROOT_NAME][XML_UNIQUE_CATEGORY_NAME][XML_UNIQUE_NAME][record][XML_PASSWORD]}]'
+                retstr += ' not found\n'
     return retstr
 
 

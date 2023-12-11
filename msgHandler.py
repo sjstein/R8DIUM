@@ -49,7 +49,7 @@ def generate_password(length=20,
 
 def write_log_file(msg):
     try:
-        fp = open(LOG_FILENAME, mode='a', encoding='utf-16')    # Using utf-16 because discord does
+        fp = open(LOG_FILENAME, mode='a', encoding='utf-16')  # Using utf-16 because discord does
         datestr = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         fp.write(f'[{datestr}] {msg}\n')
 
@@ -106,6 +106,8 @@ def add_user(discord_id, discord_name, ldb):
     join_date = datetime.date.today().strftime('%#m/%#d/%y')
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, password, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
+    dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.last_login, join_date, ldb)  # populate last_login
+    dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.active, True, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
@@ -147,6 +149,31 @@ def add_role(discord_id, role, ldb):
     return f'Role: "{role}" given to user: {dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}'
 
 
+def expire_user(discord_id, exp_date, ldb):
+    if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
+        return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, False, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password,
+                         generate_password(random.randint(15, 25)), ldb)
+    add_note(discord_id, f'Expired due to inactivity on {exp_date}', ldb)
+    dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
+    return
+
+
+def activate_user(discord_id, admin_name, ldb):
+    if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
+        return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
+    act_date = datetime.date.today().strftime('%#m/%#d/%y')
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, True, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.last_login, act_date, ldb)
+    add_note(discord_id, f'Set back to active status by {admin_name} on {act_date}', ldb)
+    dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
+    return (f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)} '
+            f'reactivated on {act_date} by {admin_name}')
+
+
 def ban_user(discord_id, admin_name, duration, reason, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
@@ -176,7 +203,7 @@ def unban_user(discord_id, admin_name, ldb):
     add_note(discord_id, f'Unbanned ({current_date}) by {admin_name}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return (f'{admin_name} **unbanned** ' 
+    return (f'{admin_name} **unbanned** '
             f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}')
 
 
@@ -187,7 +214,10 @@ def list_users(ldb):
                        f'{record[dbAccess.discord_id]} : {record[dbAccess.join_date]}')
         if record[dbAccess.banned] == 'True':
             return_str += f' **--> BANNED on {record[dbAccess.ban_date]} for {record[dbAccess.ban_duration]} days <--**'
+        if record[dbAccess.active] == 'False':
+            return_str += f' **--> Currently marked as INACTIVE <--**'
         return_str += '\n'
+
     return return_str
 
 
@@ -202,10 +232,12 @@ def show_notes(discord_id, ldb):
 
 def show_pass(discord_id, discord_name, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.sid, ldb)) < 0:
-        add_user(discord_id, discord_name, ldb)   # give the md tags back to the UID
+        add_user(discord_id, discord_name, ldb)  # give the md tags back to the UID
         return show_pass(discord_id, discord_name, ldb)
     if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.banned, ldb) == 'True':
         return f'You are currently banned'  # Don't let banned users see their password
+    if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.active, ldb) == 'False':
+        return f'Your account has been suspended due to inactivity - please contact a staff member to renew'
     result = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.password, ldb)
     return result
 
@@ -224,6 +256,8 @@ def new_pass(discord_id, ldb):
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
     if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.banned, ldb) == 'True':
         return f'You are currently banned'  # Don't let banned users see their password
+    if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.active, ldb) == 'False':
+        return f'Your account has been suspended due to inactivity - please contact a staff member to renew'
     new_pw = generate_password(random.randint(15, 25))
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password, new_pw, ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.uid, None, ldb)

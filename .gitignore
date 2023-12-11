@@ -1,6 +1,7 @@
 *.xml
 *.log
 *.json
+*.BAK
 r8diumDb.csv
 r8dium.cfg
 user_list.txt
