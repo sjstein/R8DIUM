@@ -21,10 +21,12 @@ import asyncio  # noqa
 import dbAccess
 import msgHandler
 import pathlib
+import psutil
 import r8diumInclude
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
-                           R8SERVER_NAME, R8SERVER_LOG, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME,
-                           UID_PURGE_TIME)
+                           R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS,
+                           EXP_SCAN_TIME, UID_PURGE_TIME)
+import subprocess
 
 discord_char_limit = 1900
 hsf_mtime = {}
@@ -383,4 +385,73 @@ def run_discord_bot(ldb):
             i += 1
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
+    @client.tree.command(name='restart_server', description=f'Kill Run8 server and restart')
+    @app_commands.describe(sname='Server name to restart')
+    async def bot_commands(interaction: discord.Interaction, sname: str = ''):
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        if sname == '':
+            sname = R8SERVER_NAME[0]
+        # Find server parameters within server list
+        if sname not in R8SERVER_NAME:
+            response = f'Server name [{sname}] not known\n'
+            response += 'Use "/server_info" for a list of valid server names.'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
+        else:
+            spath = R8SERVER_PATH[R8SERVER_NAME.index(sname)]
+        # Attempt to find existing running server instance
+        response = f'No running server matching {sname} found.\n'
+        for proc in psutil.process_iter(['pid', 'name', 'exe']):
+            try:
+                # Print process ID, Name, and Executable path
+                if proc.info['name'] == "Run-8 Train Simulator V3.exe":
+                    print(f"NOTICE: Run8 server being killed!\n PID: {proc.info['pid']}\n Name: {proc.info['name']}\n"
+                          f" Executable: {proc.info['exe']}")
+                    if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
+                        process = psutil.Process(proc.info['pid'])
+                        process.terminate()
+                        response = f'Server {sname} (PID {proc.info["pid"]}) terminated.\n'
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass  # This can happen if the process terminates or is not accessible
+        # Attempt to run server
+        response += f'...\nRelaunching server via batch file: '
+        proc_ret = subprocess.run(spath + '\startServer.bat')
+        response += proc_ret.args
+        print(f"NOTICE: Run8 server being started from {spath}\startserver.bat")
+
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
+
+    @client.tree.command(name='kill_server', description=f'Kill Run8 server')
+    @app_commands.describe(sname='Server name to kill')
+    async def bot_commands(interaction: discord.Interaction, sname: str = ''):
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        if sname == '':
+            sname = R8SERVER_NAME[0]
+        # Find server parameters within server list
+        if sname not in R8SERVER_NAME:
+            response = f'Server name [{sname}] not known\n'
+            response += 'Use "/server_info" for a list of valid server names.'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
+        else:
+            spath = R8SERVER_PATH[R8SERVER_NAME.index(sname)]
+        # Attempt to find existing running server instance
+        response = f'No running server matching {sname} found.\n'
+        for proc in psutil.process_iter(['pid', 'name', 'exe']):
+            try:
+                # Print process ID, Name, and Executable path
+                if proc.info['name'] == "Run-8 Train Simulator V3.exe":
+                    print(f"NOTICE: Run8 server being killed!\n PID: {proc.info['pid']}\n Name: {proc.info['name']}\n"
+                          f" Executable: {proc.info['exe']}")
+                    if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
+                        process = psutil.Process(proc.info['pid'])
+                        process.terminate()
+                        response = f'Server {sname} (PID {proc.info["pid"]}) terminated.\n'
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass  # This can happen if the process terminates or is not accessible
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
     client.run(TOKEN)
