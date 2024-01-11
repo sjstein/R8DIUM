@@ -414,7 +414,8 @@ def run_discord_bot(ldb):
                         process.terminate()
                         response = f'Server {sname} (PID {proc.info["pid"]}) terminated.\n'
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass  # This can happen if the process terminates or is not accessible
+                print(f'Exception in restart_server command - either server not running, or unable to terminate')
+                pass  
         # Attempt to run server
         response += f'...\nRelaunching server via batch file: '
         proc_ret = subprocess.run(spath + '\startServer.bat')
@@ -443,7 +444,6 @@ def run_discord_bot(ldb):
         response = f'No running server matching {sname} found.\n'
         for proc in psutil.process_iter(['pid', 'name', 'exe']):
             try:
-                # Print process ID, Name, and Executable path
                 if proc.info['name'] == "Run-8 Train Simulator V3.exe":
                     print(f"NOTICE: Run8 server being killed!\n PID: {proc.info['pid']}\n Name: {proc.info['name']}\n"
                           f" Executable: {proc.info['exe']}")
@@ -452,6 +452,7 @@ def run_discord_bot(ldb):
                         process.terminate()
                         response = f'Server {sname} (PID {proc.info["pid"]}) terminated.\n'
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass  # This can happen if the process terminates or is not accessible
+                print(f'Exception in kill_server command - either server not running, or unable to terminate')
+                pass
         await interaction.response.send_message(response, ephemeral=True)  # noqa
     client.run(TOKEN)
