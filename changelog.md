@@ -11,6 +11,9 @@ file **requirements.txt** :
 **NOTE 2**: This update requires modification of your bot configuration file. Check  **r8dium_example.cfg** for details.
 In short, a new field has been added to each [server] block to point to the run8 executable location.
 
+**NOTE 3**: This update requires adding a batch file in the same directory as your Run8 executable(s) - see below for
+more details.
+
 #### Two new bot commands have been added: ####
 
 **/kill_server** _opt_:[server_name]
