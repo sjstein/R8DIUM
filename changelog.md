@@ -20,7 +20,7 @@ more details.
 
 **/restart_server** _opt_:[server_name]
 
-To faciliate dealing with the server instances, the server admin will have to utilize the -ServerConfigFile switch 
+To facilitate dealing with the server instances, the server admin will have to utilize the -ServerConfigFile switch 
 of Run8, as well as a ServerConfig.xml file. See the documentation that comes with Run8 - specifically:
 * "Auto Server Startup.pdf"
 * "ServerOnlyMode.pdf"
