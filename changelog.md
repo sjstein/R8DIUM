@@ -14,7 +14,9 @@ Two changes were implemented to handle this issue:
 way to reactivate is to contact an admin.
 
 2 -two new commands were added to allow limited interaction with the bot db by referencing a specific user's "server ID" (sid):
+
    a: "/show_user_by_sid" was added to allow viewing of users who have left the discord server. 
+   
    b: "/arb_write_by_sid" allows writing to any field of a user's record
 
 
