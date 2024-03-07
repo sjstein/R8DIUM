@@ -378,7 +378,7 @@ def run_discord_bot(ldb):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
-        response = msgHandler.write_field(sid, field, val, ldb)
+        response = msgHandler.write_field_by_sid(sid, field, val, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     # The following commands are to be opened up to all Discord users who have access to your server
