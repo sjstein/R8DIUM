@@ -82,6 +82,21 @@ def run_discord_bot(ldb):
             clean_uids.start(ldb)
         dbAccess.send_statistics(ldb)
 
+    @client.event
+    async def on_member_remove(member):
+        if msgHandler.suspend_user(str(member.id), datetime.date.today(), 'Left discord server', ldb) > 0:
+            channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+            channel = client.get_channel(channel_id)
+            channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+            admin_channel = client.get_channel(channel_id)
+            discord_name = dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.discord_name, ldb)
+            msg = f' R8DIUM BOT has set {discord_name} to INACTIVE due to leaving server'
+            msgHandler.write_log_file(msg)
+            await channel.send(msg)
+            await admin_channel.send(msg)
+
+
+
     @tasks.loop(seconds=int(LOG_SCAN_TIME))
     async def scan_logins(ldb):
         for log_file in R8SERVER_LOG:
@@ -232,6 +247,16 @@ def run_discord_bot(ldb):
         response = msgHandler.show_user(str(member.id), ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
+    @client.tree.command(name='show_user_by_sid',
+                         description=f'Display all fields for user server id <sid>')
+    @app_commands.describe(sid='server id number')
+    async def show_user_by_sid(interaction: discord.Interaction, sid: int):
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        response = msgHandler.show_user_by_id(sid, ldb)
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
+
     @client.tree.command(name='add_user',
                          description=f'Add a new user <discord_id>')
     @app_commands.describe(member='@id')
@@ -344,6 +369,18 @@ def run_discord_bot(ldb):
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
         response = msgHandler.write_field(str(member.id), field, val, ldb)
+        await interaction.response.send_message(response, ephemeral=True)  # noqa
+
+    @client.tree.command(name='arb_write_by_sid',
+                         description=f'write value <val> to field <field> of user with server id <sid>')
+    @app_commands.describe(sid='server id number',
+                           field='Field name to write to',
+                           val='Value to write')
+    async def arb_write_by_sid(interaction: discord.Interaction, sid: int, field: str, val: str = ''):
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        response = msgHandler.write_field_by_sid(sid, field, val, ldb)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     # The following commands are to be opened up to all Discord users who have access to your server
