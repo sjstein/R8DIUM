@@ -98,6 +98,21 @@ def write_field(discord_id, field_name, write_val, ldb):
         return f'[R8DIUM: WRITE ERROR] unknown failure to write to field: {field_name}'
 
 
+def write_field_by_sid(sid, field_name, write_val, ldb):
+    if field_name not in dbAccess.db_field_list:
+        return f'[R8DIUM: FIELD ERROR] field: "{field_name}" unknown'
+    if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_id, ldb)) < 0:
+        return f'[R8DIUM: INDEX ERROR] server id {sid} not found'
+    if int(dbAccess.set_element(sid, dbAccess.sid, field_name, write_val, ldb)) > 0:
+        dbAccess.save_db(DB_FILENAME, ldb)
+        dbAccess.write_security_file(ldb)
+        if write_val == '':
+            return '<null>'
+        return write_val
+    else:
+        return f'[R8DIUM: WRITE ERROR] unknown failure to write to field: {field_name}'
+
+
 def add_user(discord_id, discord_name, ldb):
     if dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.sid, ldb) != -1:
         return f'[R8DIUM: ID ERROR] Discord id {discord_id} already exists'
@@ -147,6 +162,18 @@ def add_role(discord_id, role, ldb):
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.role, str(role), ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     return f'Role: "{role}" given to user: {dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}'
+
+
+def suspend_user(discord_id, date, reason, ldb):
+    if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
+        return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, False, ldb)
+    dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password,
+                         generate_password(random.randint(15, 25)), ldb)
+    add_note(discord_id, f'User suspended on {date} : {reason}', ldb)
+    dbAccess.save_db(DB_FILENAME, ldb)
+    dbAccess.write_security_file(ldb)
+    return
 
 
 def expire_user(discord_id, exp_date, ldb):
@@ -248,6 +275,15 @@ def show_user(discord_id, ldb):
     result = ''
     for field_name in dbAccess.db_field_list:
         result += f'{field_name}: {dbAccess.get_element(discord_id, dbAccess.discord_id, field_name, ldb)}\n'
+    return result
+
+
+def show_user_by_id(sid, ldb):
+    if int(dbAccess.get_element(sid, dbAccess.sid, dbAccess.discord_id, ldb)) < 0:
+        return f'[R8DIUM: INDEX ERROR] server id {sid} not found'
+    result = ''
+    for field_name in dbAccess.db_field_list:
+        result += f'{field_name}: {dbAccess.get_element(sid, dbAccess.sid, field_name, ldb)}\n'
     return result
 
 

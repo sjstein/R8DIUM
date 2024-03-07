@@ -16,7 +16,7 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'Excommunicated'
+SOFTWARE_VERSION = 'flagellated'
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
 
