@@ -166,7 +166,7 @@ def add_role(discord_id, role, ldb):
 
 def suspend_user(discord_id, date, reason, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
-        return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
+        return -1
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, False, ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password,
                          generate_password(random.randint(15, 25)), ldb)

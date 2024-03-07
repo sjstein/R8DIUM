@@ -82,16 +82,17 @@ def run_discord_bot(ldb):
 
     @client.event
     async def on_member_remove(member):
-        msgHandler.suspend_user(str(member.id), datetime.date.today(), 'Left discord server', ldb)
-        channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
-        channel = client.get_channel(channel_id)
-        channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
-        admin_channel = client.get_channel(channel_id)
-        discord_name = dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.discord_name, ldb)
-        msg = f' R8DIUM BOT has set {discord_name} to INACTIVE due to leaving server'
-        msgHandler.write_log_file(msg)
-        await channel.send(msg)
-        await admin_channel.send(msg)
+        if msgHandler.suspend_user(str(member.id), datetime.date.today(), 'Left discord server', ldb) > 0:
+            channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+            channel = client.get_channel(channel_id)
+            channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+            admin_channel = client.get_channel(channel_id)
+            discord_name = dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.discord_name, ldb)
+            msg = f' R8DIUM BOT has set {discord_name} to INACTIVE due to leaving server'
+            msgHandler.write_log_file(msg)
+            await channel.send(msg)
+            await admin_channel.send(msg)
+
 
 
     @tasks.loop(seconds=int(LOG_SCAN_TIME))
