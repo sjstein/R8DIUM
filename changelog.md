@@ -1,5 +1,22 @@
 # R8DIUM Changelog
 
+### 06-Mar-2024 [flagellated]
+
+** Version Update** : "flagellated"
+
+This update fixes a vulnerability wherein a user could leave the discord server, still have access to the Run8 server,
+and the discord admins would not have the ability to manipulate the user data database as it reports an "invalid 
+discord id".
+
+Two changes were implemented to handle this issue:
+
+1 - When a user leaves the discord server, their password will be changed, and their (run8) account suspended. The only 
+way to reactivate is to contact an admin.
+
+2 - a new command "/show_user_by_sid" was added to allow viewing of users who have left the discord server. To find a
+user's id (sid), you will have to list all users and find the corresponding id#.
+
+
 ### 20-Nov-2023 [Excommunicated]
 
 **Version Update** : "Excommunicated"
