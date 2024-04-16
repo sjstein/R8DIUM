@@ -424,7 +424,7 @@ def run_discord_bot(ldb):
 
     @client.tree.command(name='restart_server', description=f'Kill Run8 server and restart')
     @app_commands.describe(sname='Server name to restart')
-    async def bot_commands(interaction: discord.Interaction, sname: str = ''):
+    async def restart_server(interaction: discord.Interaction, sname: str = ''):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
@@ -444,26 +444,23 @@ def run_discord_bot(ldb):
             try:
                 # Print process ID, Name, and Executable path
                 if proc.info['name'] == "Run-8 Train Simulator V3.exe":
-                    print(f"NOTICE: Run8 server being killed!\n PID: {proc.info['pid']}\n Name: {proc.info['name']}\n"
-                          f" Executable: {proc.info['exe']}")
                     if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
                         process = psutil.Process(proc.info['pid'])
                         process.terminate()
-                        response = f'Server {sname} (PID {proc.info["pid"]}) terminated.\n'
+                        response = f'Server Restart Initiated. \nServer {sname} (PID {proc.info["pid"]}) terminated.\n'
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 print(f'Exception in restart_server command - either server not running, or unable to terminate')
                 pass  
         # Attempt to run server
-        response += f'...\nRelaunching server via batch file: '
-        proc_ret = subprocess.run(spath + '\startServer.bat')
-        response += proc_ret.args
-        print(f"NOTICE: Run8 server being started from {spath}\startserver.bat")
-
+        response += f'...\nServer {sname} starting up.\nNOTE: Wait at LEAST 5 minutes before enabling Auto DS (Otto)'
+        subprocess.run(spath + '\startServer.bat')
+        admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
+        await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='kill_server', description=f'Kill Run8 server')
     @app_commands.describe(sname='Server name to kill')
-    async def bot_commands(interaction: discord.Interaction, sname: str = ''):
+    async def kill_server(interaction: discord.Interaction, sname: str = ''):
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
@@ -482,14 +479,14 @@ def run_discord_bot(ldb):
         for proc in psutil.process_iter(['pid', 'name', 'exe']):
             try:
                 if proc.info['name'] == "Run-8 Train Simulator V3.exe":
-                    print(f"NOTICE: Run8 server being killed!\n PID: {proc.info['pid']}\n Name: {proc.info['name']}\n"
-                          f" Executable: {proc.info['exe']}")
                     if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
                         process = psutil.Process(proc.info['pid'])
                         process.terminate()
-                        response = f'Server {sname} (PID {proc.info["pid"]}) terminated.\n'
+                        response = f'Server Kill initiated.\nServer {sname} (PID {proc.info["pid"]}) terminated.\n'
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 print(f'Exception in kill_server command - either server not running, or unable to terminate')
                 pass
+        admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
+        await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
     client.run(TOKEN)
