@@ -1,5 +1,39 @@
 # R8DIUM Changelog
 
+### 7-Mar-2024 [Gravitated]
+### This update introduces the ability to kill / restart Run8 server instances ###
+
+**Version Update** : "Gravitated"
+
+**NOTE 1**: This update requires the addition of a new python library ("psutil") as reflected in the 
+file **requirements.txt** : 
+
+**NOTE 2**: This update requires modification of your bot configuration file. Check  **r8dium_example.cfg** for details.
+In short, a new field has been added to each [server] block to point to the run8 executable location.
+
+**NOTE 3**: This update requires adding a batch file in the same directory as your Run8 executable(s) - see below for
+more details.
+
+#### Two new bot commands have been added: ####
+
+**/kill_server** _opt_:[server_name]
+
+**/restart_server** _opt_:[server_name]
+
+To facilitate dealing with the server instances, the server admin will have to utilize the -ServerConfigFile switch 
+of Run8, as well as a ServerConfig.xml file. See the documentation that comes with Run8 - specifically:
+* "Auto Server Startup.pdf"
+* "ServerOnlyMode.pdf"
+
+Along with modifying the ServerConfig.xml file to tailor for your needs, you will also need to install a batch file in
+the Run8 executable directory. An example batch file is included with this distribution. See:
+
+**startServer_example.bat**
+
+For those admins who are only dealing with one server per bot, the [server_name] parameter for the new commands can be 
+ignored. For those admins who manage more than one server instance from a single bot, the server_name specifies which 
+server instance the command will affect. If left blank, the first server in your server list will be assumed.
+
 ### 06-Mar-2024 [flagellated]
 
 **Version Update** : "flagellated"

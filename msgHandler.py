@@ -55,6 +55,7 @@ def write_log_file(msg):
 
     except Exception as e:
         print(f'Exception in write_log_file : {e}')
+        return
 
     fp.close()
     return
@@ -153,7 +154,8 @@ def add_note(discord_id, note, ldb):
     else:
         dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.notes, str(note), ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
-    return f'Note: "{note}" added to user: {dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}'
+    return (f'Note: "{note}" added to user: '
+            f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}')
 
 
 def add_role(discord_id, role, ldb):
@@ -161,7 +163,8 @@ def add_role(discord_id, role, ldb):
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.role, str(role), ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
-    return f'Role: "{role}" given to user: {dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}'
+    return (f'Role: "{role}" given to user: '
+            f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}')
 
 
 def suspend_user(discord_id, date, reason, ldb):
@@ -244,7 +247,6 @@ def list_users(ldb):
         if record[dbAccess.active] == 'False':
             return_str += f' **--> Currently marked as INACTIVE <--**'
         return_str += '\n'
-
     return return_str
 
 

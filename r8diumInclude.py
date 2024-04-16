@@ -16,7 +16,8 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'flagellated'
+SOFTWARE_VERSION = 'Gravitated'
+
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
 
@@ -62,6 +63,7 @@ try:
     UID_PURGE_TIME = config['discord']['UID_purge_timer']
 
     R8SERVER_NAME = list()
+    R8SERVER_PATH = list()
     SECURITY_FILE = list()
     R8SERVER_ADDR = list()
     R8SERVER_PORT = list()
@@ -69,6 +71,7 @@ try:
     for key, sub_dict in config.items():
         if key.startswith('server'):
             SECURITY_FILE.append(sub_dict['security_file'])
+            R8SERVER_PATH.append(sub_dict['launch_path'])
             R8SERVER_ADDR.append(sub_dict['r8server_addr'])
             R8SERVER_PORT.append(sub_dict['r8server_port'])
             R8SERVER_NAME.append(sub_dict['name'])
