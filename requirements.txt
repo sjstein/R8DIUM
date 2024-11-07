@@ -2,3 +2,4 @@ discord >= 2
 requests >= 2
 xmltodict >= 0
 psutil >= 0.7.1
+audioop-lts >=0.2.1
