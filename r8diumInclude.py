@@ -52,6 +52,9 @@ try:
     # Discord bot unique token
     TOKEN = config['discord']['bot_token']
 
+    # Discord bot status
+    BOT_STATUS = config['discord']['bot_status']
+
     # Discord channels
     CH_ADMIN = config['discord']['ch_admin']
     CH_LOG = config['discord']['ch_log']
