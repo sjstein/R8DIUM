@@ -1,5 +1,11 @@
 # R8DIUM
 
+## Killerp51 R8DIUM Fork
+This is a fork of sjstein's R8DIUM with minor additions detailed below. sjtein/Garrisonsan feel free to incorporate these changes into your version if you'd like
+
+* Fixed - audioop file missing
+* Added - Discord bot activity status (incorporated into config.cfg)
+
 ## The Run8 Database for Integrated User Management
 
 **R8DIUM is a Discord "bot" which enables user management for a Run8 server**. It allows admin/yardmasters the ability to
