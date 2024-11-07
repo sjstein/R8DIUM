@@ -1,7 +1,7 @@
 # R8DIUM
 
-## Killerp51 R8DIUM Fork
-This is a fork of sjstein's R8DIUM with minor additions detailed below. sjtein/Garrisonsan feel free to incorporate these changes into your version if you'd like
+## Killerp51's R8DIUM Fork
+This is a fork of sjstein's R8DIUM with minor fixes and additions detailed below. Major credit to them for doing the heavy lifting. sjtein/Garrisonsan, if you see this, feel free to incorporate these changes into your work
 
 * Fixed - audioop file missing
 * Added - Discord bot activity status (incorporated into config.cfg)
