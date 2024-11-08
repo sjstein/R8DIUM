@@ -55,6 +55,9 @@ try:
     # Discord bot status
     BOT_STATUS = config['discord']['bot_status']
 
+    # Discord role assignment
+    DISCORD_ROLE = config['discord']['discord_role']
+
     # Discord channels
     CH_ADMIN = config['discord']['ch_admin']
     CH_LOG = config['discord']['ch_log']

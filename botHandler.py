@@ -25,7 +25,7 @@ import psutil
 import r8diumInclude
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
                            R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS,
-                           EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS)
+                           EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS, DISCORD_ROLE)
 import subprocess
 
 discord_char_limit = 1900
@@ -84,6 +84,17 @@ def run_discord_bot(ldb):
             msgHandler.write_log_file(f'Starting UID purge daemon')
             clean_uids.start(ldb)
         dbAccess.send_statistics(ldb)
+
+
+    #Assign Discord Role when user joins
+    @client.event
+    async def on_member_join(member):
+        role = discord.utils.get(member.guild.roles, name=DISCORD_ROLE)
+
+        if role is not None:
+            await member.add_roles(role)
+            print(f"Assigned role '{role.name}' to {member.name}.")
+
 
     @client.event
     async def on_member_remove(member):
