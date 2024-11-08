@@ -54,7 +54,8 @@ def run_discord_bot(ldb):
     async def on_ready():
         print(f'Discord bot [{client.user}] is starting')
         # Discord bot activity status
-        await client.change_presence(activity=discord.Game(BOT_STATUS))
+        if BOT_STATUS:
+            await client.change_presence(activity=discord.Game(BOT_STATUS))
         # Populate the dict with current host file modification timestamps
         for filename in r8diumInclude.SECURITY_FILE:
             hsf_mtime[filename] = pathlib.Path(filename).stat().st_mtime
