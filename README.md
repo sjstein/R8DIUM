@@ -5,6 +5,7 @@ This fork is based off of the R8DIUM-Gravitated release. All credit goes to sjst
 
 * Fixed - audioop file missing
 * Added - Discord bot activity status (incorporated into config.cfg)
+* Added - Discord role assignment upon member joining server (optional)
 
 ## The Run8 Database for Integrated User Management
 
