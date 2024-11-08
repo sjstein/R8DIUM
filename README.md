@@ -1,12 +1,5 @@
 # R8DIUM
 
-## Killerp51's R8DIUM Fork
-This fork is based off of the R8DIUM-Gravitated release. All credit goes to sjstein and Garrisonsan for the release. I have made a few fixes and added some features. sjtein/Garrisonsan, if you see this, feel free to incorporate these changes into your work
-
-* Fixed - audioop file missing
-* Added - Discord bot activity status (incorporated into config.cfg)
-* Added - Discord role assignment upon member joining server (optional)
-
 ## The Run8 Database for Integrated User Management
 
 **R8DIUM is a Discord "bot" which enables user management for a Run8 server**. It allows admin/yardmasters the ability to
