@@ -88,17 +88,16 @@ def run_discord_bot(ldb):
     @client.event
     async def on_member_remove(member):
         if msgHandler.suspend_user(str(member.id), datetime.date.today(), 'Left discord server', ldb) > 0:
-            channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
-            channel = client.get_channel(channel_id)
-            channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
-            admin_channel = client.get_channel(channel_id)
             discord_name = dbAccess.get_element(str(member.id), dbAccess.discord_id, dbAccess.discord_name, ldb)
             msg = f' R8DIUM BOT has set {discord_name} to INACTIVE due to leaving server'
+            channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+            admin_channel = client.get_channel(channel_id)
             msgHandler.write_log_file(msg)
-            await channel.send(msg)
             await admin_channel.send(msg)
-
-
+            if CH_LOG != 'none':
+                channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+                log_channel = client.get_channel(channel_id)
+                await log_channel.send(msg)
 
     @tasks.loop(seconds=int(LOG_SCAN_TIME))
     async def scan_logins(ldb):
@@ -152,15 +151,16 @@ def run_discord_bot(ldb):
             diff = (today - datetime.datetime.strptime(last_active, '%m/%d/%y')).days
             if diff > int(INACT_DAYS) and \
                     dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.active, ldb) != 'False':
-                channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
-                channel = client.get_channel(channel_id)
-                channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
-                admin_channel = client.get_channel(channel_id)
                 discord_name = dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)
                 msg = f'Automated scan set user {discord_name} to INACTIVE; last login : {last_active}'
                 msgHandler.write_log_file(msg)
-                await channel.send(msg)
+                channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+                admin_channel = client.get_channel(channel_id)
                 await admin_channel.send(msg)
+                if CH_LOG != 'none':
+                    channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+                    log_channel = client.get_channel(channel_id)
+                    await log_channel.send(msg)
                 msgHandler.expire_user(discord_id, today_str, ldb)
         return
 
@@ -183,16 +183,17 @@ def run_discord_bot(ldb):
         for record in local_db:
             if record[dbAccess.banned] == 'True':
                 if not msgHandler.check_ban_status(record[dbAccess.sid], local_db):
-                    channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
-                    channel = client.get_channel(channel_id)
-                    channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
-                    admin_channel = client.get_channel(channel_id)
                     msg = f'Automated scan **unbanned** {record[dbAccess.discord_name]} due to ' \
                           f'time served ({record[dbAccess.ban_duration]} days)'
                     msgHandler.write_log_file(msg)
-                    msgHandler.unban_user(record[dbAccess.discord_id], 'Automated check', local_db)
-                    await channel.send(msg)
+                    channel_id = discord.utils.get(client.get_all_channels(), name=CH_ADMIN).id
+                    admin_channel = client.get_channel(channel_id)
                     await admin_channel.send(msg)
+                    if CH_LOG != 'none':
+                        channel_id = discord.utils.get(client.get_all_channels(), name=CH_LOG).id
+                        log_channel = client.get_channel(channel_id)
+                        await log_channel.send(msg)
+                    msgHandler.unban_user(record[dbAccess.discord_id], 'Automated check', local_db)
 
     @client.tree.command(name='bot_commands', description=f'Show all commands available')
     async def bot_commands(interaction: discord.Interaction):
