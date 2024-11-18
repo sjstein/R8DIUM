@@ -58,6 +58,8 @@ try:
     # Discord channels
     CH_ADMIN = config['discord']['ch_admin']
     CH_LOG = config['discord']['ch_log']
+    if CH_LOG.lower() == 'none':
+        CH_LOG = 'none'
 
     BAN_SCAN_TIME = config['discord']['ban_scan_time']
     LOG_SCAN_TIME = config['discord']['log_scan_time']
