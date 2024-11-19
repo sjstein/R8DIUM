@@ -306,7 +306,7 @@ def new_pass(discord_id, ldb):
     write_log_file(f'PASSWORD (RE)SET REQUEST: discord_id [{discord_id}], discord_name ['
                    f'{dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_name, ldb)}] '
                    f'{new_pw}')
-    return f'new password = {new_pw}'
+    return new_pw
 
 
 if __name__ == '__main__':
