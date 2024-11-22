@@ -16,7 +16,7 @@
 ##########################
 import configparser
 
-SOFTWARE_VERSION = 'Gravitated'
+SOFTWARE_VERSION = 'Halogenated'
 
 CONFIG_FILE = 'r8dium.cfg'
 STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
@@ -73,6 +73,11 @@ try:
     R8SERVER_ADDR = list()
     R8SERVER_PORT = list()
     R8SERVER_LOG = list()
+    R8SERVER_INDUSTRY_FNAME = list()
+    R8SERVER_SECURITY_FNAME = list()
+    R8SERVER_WORLD_FNAME = list()
+    R8SERVER_TRAFFIC_FNAME = list()
+    R8SERVER_HUMP_FNAME = list()
     for key, sub_dict in config.items():
         if key.startswith('server'):
             SECURITY_FILE.append(sub_dict['security_file'])
@@ -81,9 +86,11 @@ try:
             R8SERVER_PORT.append(sub_dict['r8server_port'])
             R8SERVER_NAME.append(sub_dict['name'])
             R8SERVER_LOG.append(sub_dict['log_file'])
-
-
-
+            R8SERVER_INDUSTRY_FNAME.append(sub_dict['industry_file'])
+            R8SERVER_SECURITY_FNAME.append(sub_dict['security_file'])
+            R8SERVER_WORLD_FNAME.append(sub_dict['world_file'])
+            R8SERVER_TRAFFIC_FNAME.append(sub_dict['traffic_file'])
+            R8SERVER_HUMP_FNAME.append(sub_dict['hump_file'])
 
 except KeyError as e:
     print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
