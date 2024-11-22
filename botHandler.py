@@ -24,8 +24,9 @@ import pathlib
 import psutil
 import r8diumInclude
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
-                           R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, DB_FILENAME, LOG_SCAN_TIME, INACT_DAYS,
-                           EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS)
+                           R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, R8SERVER_SECURITY_FNAME, R8SERVER_WORLD_FNAME,
+                           R8SERVER_INDUSTRY_FNAME, R8SERVER_HUMP_FNAME, R8SERVER_TRAFFIC_FNAME, DB_FILENAME,
+                           LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS, LOG_FILE, USER_DB)
 import subprocess
 
 discord_char_limit = 1900
@@ -493,4 +494,75 @@ def run_discord_bot(ldb):
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
+
+    @client.tree.command(name='download_file', description=f'Download a configuration file from server')
+    @app_commands.describe(fname='The name of the file to send [hump, industry, traffic, world]',
+                           sname='Server name')
+    async def download_file(interaction: discord.Interaction, fname: str, sname: str = ''):
+        print('here in the send file')
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        if sname == '':
+            sname = R8SERVER_NAME[0]
+        # Find server parameters within server list
+        if sname not in R8SERVER_NAME:
+            response = f'Server name [{sname}] not known\n'
+            response += 'Use "/server_info" for a list of valid server names.'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
+        else:
+            if fname.lower() == 'hump':
+                spath = R8SERVER_HUMP_FNAME[R8SERVER_NAME.index(sname)]
+            elif fname.lower() == 'industry':
+                spath = R8SERVER_INDUSTRY_FNAME[R8SERVER_NAME.index(sname)]
+            elif fname.lower() == 'traffic':
+                spath = R8SERVER_TRAFFIC_FNAME[R8SERVER_NAME.index(sname)]
+            elif fname.lower() == 'world':
+                spath = R8SERVER_WORLD_FNAME[R8SERVER_NAME.index(sname)]
+
+            else:
+                response = f'Filename "{fname}" not found\n'
+                await interaction.response.send_message(response, ephemeral=True)  # noqa
+                return
+            if spath == '':
+                response = f'**Error**: {fname} file not eligible for download.\n'
+                await interaction.response.send_message(response, ephemeral=True)  # noqa
+                return
+        await interaction.response.send_message(file=discord.File(spath), ephemeral=True)  # noqa
+
+    @client.tree.command(name='admin_file_download', description=f'Download admin files from server')
+    @app_commands.describe(fname='The name of the file to send [database, log, r8dium_log, security]',
+                           sname='Server name')
+    async def admin_file_download(interaction: discord.Interaction, fname: str, sname: str = ''):
+        if CH_LOG != 'none':
+            log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
+            await log_channel.send(log_message(interaction))
+        if sname == '':
+            sname = R8SERVER_NAME[0]
+        # Find server parameters within server list
+        if sname not in R8SERVER_NAME:
+            response = f'Server name [{sname}] not known\n'
+            response += 'Use "/server_info" for a list of valid server names.'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
+        else:
+            if fname.lower() == 'security':
+                spath = R8SERVER_SECURITY_FNAME[R8SERVER_NAME.index(sname)]
+            elif fname.lower() == 'log':
+                spath = R8SERVER_LOG[R8SERVER_NAME.index(sname)]
+            elif fname.lower() == 'r8dium_log':
+                spath = LOG_FILE + '.log'
+            elif fname.lower() == 'database':
+                spath = USER_DB + '.csv'
+            else:
+                response = f'Filename "{fname}" not found\n'
+                await interaction.response.send_message(response, ephemeral=True)  # noqa
+                return
+            if spath == '':
+                response = f'**Error**: {fname} file not eligible for download.\n'
+                await interaction.response.send_message(response, ephemeral=True)  # noqa
+                return
+        await interaction.response.send_message(file=discord.File(spath), ephemeral=True)  # noqa
+
     client.run(TOKEN)

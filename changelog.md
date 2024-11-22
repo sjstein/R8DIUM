@@ -1,5 +1,71 @@
 # R8DIUM Changelog
 
+### 22-Nov-2024 [Halogenated]
+* ### This update introduces the ability to allow users and administrators access to certain files for downloading. ###
+* ### This update also adds the ability to set the bot status message. ###
+* ### Finally, this update fixes a latent bug for users who do not take advantage of command logging ###
+
+**Version Update** : "Halogenated"
+
+**NOTE 1**: You will need to add some fields to your r8dium configuration file in support of the feature additions
+Please see section below for a minimum set. 
+
+---
+#### Two new bot commands have been added: ####
+
+`/download_file** [filename] _opt_:[server_name]` (where filename can be _hump_, _industry_, _traffic_, _world_)
+
+_hump_ is the hump configuration file
+
+_industry_ is the industry configuration file
+
+_traffic_ is the AITraffic configuration file
+
+_world_ is the latest world save on the server
+
+File locations are specified within the configuration file - see r8dium_example.cfg for specifics, 
+**but at a bare minimum the following needs to be added within each server section**:
+
+`industry_file =`
+
+`world_file =`
+
+`traffic_file =`
+
+`hump_file =`
+
+---
+`/admin_download_file [filename] _opt_:[server_name]` (where filename can be _database_, _log_, _r8dium_log_, _security_)
+
+_database_ is the r8dium user database (cleartext csv)
+
+_log_ is the **run8** server log file
+
+_r8dium_log_ is the log file of the bot itself
+
+_security_ is the run8 hostSecurity xml file
+
+No new additions to the configuration file are required for this command.
+
+It is HIGHLY suggested to limit the use of this command to only trusted admin / staff as it exposes the user database.
+
+---
+
+A new entry to the configuration file has been added to specify a status message for the r8dium bot:
+(Thanks to @KillerP51 for this addition)
+
+`bot_status = <status message>`
+
+Leave blank for no status message
+
+---
+
+#### Bug fix ####
+If a user had opted out of using the log channel feature of R8DIUM, a few of the more recently added commands attempted
+to write to a NULL channel anyway. This has been corrected.
+
+---
+
 ### 7-Mar-2024 [Gravitated]
 ### This update introduces the ability to kill / restart Run8 server instances ###
 
