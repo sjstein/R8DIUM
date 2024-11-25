@@ -17,9 +17,14 @@ maintenance tasks.
 locally - **no data is exported off the host machine**.
 * R8DIUM utilizes individual passwords for all _Run8 server_ members. 
 * Utilizing **Discord server** roles, the _Run8 server_ owner can delegate certain personnel the ability to add, remove,
-ban and unban users by using R8DIUM commands. 
+ban and unban users by using R8DIUM commands.
+* R8DIUM can be configured to allow certain users the ability to restart / kill the Run8 server instance.
+* R8DIUM can allow the server owner to designate a variety of files to be eligible for users to download. These
+can include the Hump, Industry, and Traffic configurations. The last World Save is also an optional download.
+* R8DIUM admin types can be allowed to download R8DIUM infrastructure files for maintenance, backup, and debugging purposes.
 * R8DIUM handles tracking of _Run8 server_ USER passwords and their active/banned status. 
 * R8DIUM will automatically unban users after a specified duration has elapsed. 
+* R8DIUM can (optionally) "expire" users after a specified duration of inactivity.
 * R8DIUM synchronizes its own user data with the _Run8 server_ security file - no need for manual edits.
 * R8DIUM allows storing and reading of notes for each user it tracks.
 * R*DIUM has limited commands to interact with users - allowing them to view their password, request a new password, 
@@ -59,6 +64,7 @@ file (discussed later).
 ### To install:
 From the R8DIUM installation directory:
 * Set up a new virtual environment per your local installation / OS within the directory you installed the R8DIUM software
+  (for a walkthrough on virtual environments, try searching the internet. The official documentation is here: https://docs.python.org/3/library/venv.html )
 * Activate your new environment
 * update pip : `python -m pip install --upgrade pip`
 * install packages : `pip install -r requirements.txt`
@@ -89,6 +95,7 @@ From the R8DIUM installation directory:
 * botHandler.py : Define bot commands and interactions
 * msgHandler.py : Middleman between bot, database, and (local) file system
 * dbAccess.py   : Database support
+* logScraper.py : Functions to parse through the Run8 log file
 * r8dium_example.cfg : Sample configuration file
 ~~* r8diumDb-blank.csv : Blank database schema~~
 
