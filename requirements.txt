@@ -2,4 +2,4 @@ discord >= 2
 requests >= 2
 xmltodict >= 0
 psutil >= 0.7.1
-aaudioop-lts >=0.2.1; python_version>='3.13' # only required until discord updates their api dependency on audioop
+audioop-lts >=0.2.1; python_version>='3.13' # only required until discord updates their api dependency on audioop
