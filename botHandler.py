@@ -20,6 +20,7 @@ from discord.ext import commands, tasks  # noqa
 import asyncio  # noqa
 import dbAccess
 import msgHandler
+import os
 import pathlib
 import psutil
 import r8diumInclude
@@ -27,7 +28,9 @@ from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_
                            R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, R8SERVER_SECURITY_FNAME, R8SERVER_WORLD_FNAME,
                            R8SERVER_INDUSTRY_FNAME, R8SERVER_HUMP_FNAME, R8SERVER_TRAFFIC_FNAME, DB_FILENAME,
                            LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS, LOG_FILE, USER_DB)
+import shutil
 import subprocess
+import zipfile
 
 discord_char_limit = 1900
 hsf_mtime = {}
@@ -519,7 +522,10 @@ def run_discord_bot(ldb):
             elif fname.lower() == 'traffic':
                 spath = R8SERVER_TRAFFIC_FNAME[R8SERVER_NAME.index(sname)]
             elif fname.lower() == 'world':
-                spath = R8SERVER_WORLD_FNAME[R8SERVER_NAME.index(sname)]
+                dest = shutil.copyfile(R8SERVER_WORLD_FNAME[R8SERVER_NAME.index(sname)],'Auto Save World.xml')
+                with zipfile.ZipFile('Auto Save World.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+                    zf.write('Auto Save World.xml')
+                spath = 'Auto Save World.zip'
 
             else:
                 response = f'Filename "{fname}" not found\n'
@@ -530,6 +536,9 @@ def run_discord_bot(ldb):
                 await interaction.response.send_message(response, ephemeral=True)  # noqa
                 return
         await interaction.response.send_message(file=discord.File(spath), ephemeral=True)  # noqa
+        if spath is 'Auto Save World.zip':
+            os.remove('Auto Save World.zip')
+            os.remove('Auto Save World.xml')
 
     @client.tree.command(name='admin_file_download', description=f'Download admin files from server')
     @app_commands.describe(fname='The name of the file to send [database, log, r8dium_log, security]',
