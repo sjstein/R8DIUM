@@ -1,5 +1,9 @@
 # R8DIUM Changelog
 
+### 8-May-2025 [Halogenated - incremental]
+* ### Bug fix - Discord changed their file limit size for bot uploads which caused issues with the world save.
+* ###   This patch addresses that by compressing the world save into a zip file before uploading to the user.
+
 ### 22-Nov-2024 [Halogenated]
 * ### This update introduces the ability to allow users and administrators access to certain files for downloading. ###
 * ### This update also adds the ability to set the bot status message. ###
