@@ -445,6 +445,7 @@ def run_discord_bot(ldb):
             spath = R8SERVER_PATH[R8SERVER_NAME.index(sname)]
         # Attempt to find existing running server instance
         response = f'No running server matching {sname} found.\n'
+        await interaction.response.defer()  # noqa      Use the defer() here since sometimes this can take a while
         for proc in psutil.process_iter(['pid', 'name', 'exe']):
             try:
                 # Print process ID, Name, and Executable path
@@ -461,7 +462,7 @@ def run_discord_bot(ldb):
         subprocess.run(spath + '\startServer.bat')
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
-        await interaction.response.send_message(response, ephemeral=True)  # noqa
+        await interaction.followup.send(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='kill_server', description=f'Kill Run8 server')
     @app_commands.describe(sname='Server name to kill')
