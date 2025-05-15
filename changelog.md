@@ -1,5 +1,10 @@
 # R8DIUM Changelog
 
+### 15-May-2025 [Halogenated - incremental]
+* ### Bug fix - more recent versions of Python complain about escaped sequences in file paths - this patch addresses
+* that issue.
+* ### Bug fix - improperly specified literal comparison from last patch generated warnings, this has been fixed.
+
 ### 8-May-2025 [Halogenated - incremental]
 * ### Bug fix - Discord changed their file limit size for bot uploads which caused issues with the world save.
 * ###   This patch addresses that by compressing the world save into a zip file before uploading to the user.
