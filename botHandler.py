@@ -536,7 +536,7 @@ def run_discord_bot(ldb):
                 await interaction.response.send_message(response, ephemeral=True)  # noqa
                 return
         await interaction.response.send_message(file=discord.File(spath), ephemeral=True)  # noqa
-        if spath is 'Auto Save World.zip':
+        if spath == 'Auto Save World.zip':
             os.remove('Auto Save World.zip')
             os.remove('Auto Save World.xml')
 
