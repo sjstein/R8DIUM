@@ -452,7 +452,7 @@ def run_discord_bot(ldb):
             try:
                 # Print process ID, Name, and Executable path
                 if proc.info['name'] == "Run-8 Train Simulator V3.exe":
-                    if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
+                    if proc.info['exe'] == spath + '\\Run-8 Train Simulator V3.exe':
                         process = psutil.Process(proc.info['pid'])
                         process.terminate()
                         response = f'Server Restart Initiated. \nServer {sname} (PID {proc.info["pid"]}) terminated.\n'
@@ -461,7 +461,7 @@ def run_discord_bot(ldb):
                 pass  
         # Attempt to run server
         response += f'...\nServer {sname} starting up.\nNOTE: Wait at LEAST 5 minutes before enabling Auto DS (Otto)'
-        subprocess.run(spath + '\startServer.bat')
+        subprocess.run(spath + '\\startServer.bat')
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
@@ -487,7 +487,7 @@ def run_discord_bot(ldb):
         for proc in psutil.process_iter(['pid', 'name', 'exe']):
             try:
                 if proc.info['name'] == "Run-8 Train Simulator V3.exe":
-                    if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
+                    if proc.info['exe'] == spath + '\\Run-8 Train Simulator V3.exe':
                         process = psutil.Process(proc.info['pid'])
                         process.terminate()
                         response = f'Server Kill initiated.\nServer {sname} (PID {proc.info["pid"]}) terminated.\n'
