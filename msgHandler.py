@@ -21,6 +21,11 @@ import dbAccess
 from r8diumInclude import DB_FILENAME, LOG_FILENAME
 
 
+def _short_date(value):
+    """Return the existing M/D/YY database format on every operating system."""
+    return f'{value.month}/{value.day}/{value:%y}'
+
+
 def generate_password(length=20,
                       lowercase=True,
                       uppercase=True,
@@ -119,7 +124,7 @@ def add_user(discord_id, discord_name, ldb):
         return f'[R8DIUM: ID ERROR] Discord id {discord_id} already exists'
     new_sid = dbAccess.add_new_user(discord_id, discord_name, ldb)
     password = generate_password(random.randint(15, 25))
-    join_date = datetime.date.today().strftime('%#m/%#d/%y')
+    join_date = _short_date(datetime.date.today())
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.password, password, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.join_date, join_date, ldb)
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.last_login, join_date, ldb)  # populate last_login
@@ -127,7 +132,6 @@ def add_user(discord_id, discord_name, ldb):
     dbAccess.set_element(new_sid, dbAccess.sid, dbAccess.banned, False, ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    dbAccess.send_statistics(ldb)
     return f'{discord_name} (SID: {new_sid}) added on {join_date}, pass: {password}'
 
 
@@ -140,7 +144,6 @@ def delete_user(discord_id, ldb):
         return f'[R8DIUM: UNK ERROR] in delete user routine'
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    dbAccess.send_statistics(ldb)
     return f'User: {user_name} ({discord_id}) deleted'
 
 
@@ -168,7 +171,8 @@ def add_role(discord_id, role, ldb):
 
 
 def suspend_user(discord_id, date, reason, ldb):
-    if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
+    sid = int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.sid, ldb))
+    if sid < 0:
         return -1
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, False, ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.password,
@@ -176,7 +180,7 @@ def suspend_user(discord_id, date, reason, ldb):
     add_note(discord_id, f'User suspended on {date} : {reason}', ldb)
     dbAccess.save_db(DB_FILENAME, ldb)
     dbAccess.write_security_file(ldb)
-    return
+    return sid
 
 
 def expire_user(discord_id, exp_date, ldb):
@@ -194,7 +198,7 @@ def expire_user(discord_id, exp_date, ldb):
 def activate_user(discord_id, admin_name, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
-    act_date = datetime.date.today().strftime('%#m/%#d/%y')
+    act_date = _short_date(datetime.date.today())
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.active, True, ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.last_login, act_date, ldb)
     add_note(discord_id, f'Set back to active status by {admin_name} on {act_date}', ldb)
@@ -207,7 +211,7 @@ def activate_user(discord_id, admin_name, ldb):
 def ban_user(discord_id, admin_name, duration, reason, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
-    ban_date = datetime.date.today().strftime('%#m/%#d/%y')
+    ban_date = _short_date(datetime.date.today())
     # ban_date = datetime.date.today()
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.banned, True, ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.ban_date, ban_date, ldb)
@@ -226,7 +230,7 @@ def ban_user(discord_id, admin_name, duration, reason, ldb):
 def unban_user(discord_id, admin_name, ldb):
     if int(dbAccess.get_element(discord_id, dbAccess.discord_id, dbAccess.discord_id, ldb)) < 0:
         return f'[R8DIUM: INDEX ERROR] discord id {discord_id} not found'
-    current_date = datetime.date.today().strftime('%#m/%#d/%y')
+    current_date = _short_date(datetime.date.today())
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.banned, False, ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.ban_date, '', ldb)
     dbAccess.set_element(discord_id, dbAccess.discord_id, dbAccess.ban_duration, '', ldb)

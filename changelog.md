@@ -1,5 +1,13 @@
 # R8DIUM Changelog
 
+### Unreleased
+* Added configurable cross-platform start, stop, and restart commands for Linux and container deployments (#148).
+* Preserved the existing Windows `startServer.bat` and process control behavior when commands are left blank.
+* Updated world-save downloads to use platform-independent temporary paths.
+* Added Docker image support, a private supervisor client, and Docker-secret token loading.
+* Prevented Discord reconnects from starting duplicate periodic tasks.
+* Removed statistics reporting and its external dependency (#149).
+
 ### 8-May-2025 [Halogenated - incremental]
 * ### Bug fix - Discord changed their file limit size for bot uploads which caused issues with the world save.
 * ###   This patch addresses that by compressing the world save into a zip file before uploading to the user.

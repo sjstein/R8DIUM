@@ -15,11 +15,12 @@
 # If not, see <https://www.gnu.org/licenses/>.
 ##########################
 import configparser
+import os
+from pathlib import Path
 
 SOFTWARE_VERSION = 'Halogenated'
 
-CONFIG_FILE = 'r8dium.cfg'
-STAT_URL = 'https://www.b2fengineering.com/r8dium/check-in'
+CONFIG_FILE = os.environ.get('R8DIUM_CONFIG_FILE', 'r8dium.cfg')
 
 config = configparser.ConfigParser()
 if len(config.read(CONFIG_FILE)) == 0:
@@ -30,27 +31,16 @@ try:
     # Local configuration options
     USER_DB = config['local']['db_name']
     LOG_FILE = config['local']['log_file']
-    if config['local']['send_stats'] == 'True':
-        SEND_STATS = True
-    else:
-        SEND_STATS = False
-    STAT_TOKEN = config['local']['stat_token']
-
-    if not SEND_STATS and (STAT_TOKEN != '' or STAT_TOKEN != '[insert STAT token]'):
-        print('**WARNING**\nIt appears that you have entered a stat_token, but not opted in to statistics sharing!\n'
-              'Please check your configuration file for errors. See the file STATS-OPT-IN for details.')
-    if SEND_STATS and (STAT_TOKEN == '' or STAT_TOKEN == '[insert STAT token]'):
-        print('**WARNING**\nYou have opted in to share statistics with the developers - thanks!\n'
-              'However it appears you have yet to '
-              'obtain and/or enter your secure token in the configuration file.\n'
-              'Please see STATS-OPT-IN.md for details on how to proceed.')
-        exit(-1)
 
     DB_FILENAME = USER_DB + '.csv'
     LOG_FILENAME = LOG_FILE + '.log'
 
     # Discord bot unique token
-    TOKEN = config['discord']['bot_token']
+    token_file = os.environ.get('R8DIUM_BOT_TOKEN_FILE', '')
+    file_token = Path(token_file).read_text(encoding='utf-8').strip() if token_file else ''
+    TOKEN = os.environ.get('R8DIUM_BOT_TOKEN') or file_token or config['discord'].get('bot_token', '')
+    if not TOKEN:
+        raise KeyError('bot_token, R8DIUM_BOT_TOKEN, or R8DIUM_BOT_TOKEN_FILE')
 
     # Discord bot status
     BOT_STATUS = config['discord']['bot_status']
@@ -78,6 +68,9 @@ try:
     R8SERVER_WORLD_FNAME = list()
     R8SERVER_TRAFFIC_FNAME = list()
     R8SERVER_HUMP_FNAME = list()
+    R8SERVER_START_COMMAND = list()
+    R8SERVER_STOP_COMMAND = list()
+    R8SERVER_RESTART_COMMAND = list()
     for key, sub_dict in config.items():
         if key.startswith('server'):
             SECURITY_FILE.append(sub_dict['security_file'])
@@ -91,6 +84,9 @@ try:
             R8SERVER_WORLD_FNAME.append(sub_dict['world_file'])
             R8SERVER_TRAFFIC_FNAME.append(sub_dict['traffic_file'])
             R8SERVER_HUMP_FNAME.append(sub_dict['hump_file'])
+            R8SERVER_START_COMMAND.append(sub_dict.get('start_command', ''))
+            R8SERVER_STOP_COMMAND.append(sub_dict.get('stop_command', ''))
+            R8SERVER_RESTART_COMMAND.append(sub_dict.get('restart_command', ''))
 
 except KeyError as e:
     print(f'\nr8dium ({__name__}.py): FATAL exception, unable to find [{e}] in configuration file')
