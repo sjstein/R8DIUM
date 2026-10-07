@@ -56,6 +56,21 @@ After these are added, they will show in  the command list like this:
 
 Make sure to save and then test.
 
+## Linux and container server control
+
+Windows installations may leave `start_command`, `stop_command`, and `restart_command` blank to retain the existing
+`startServer.bat` and process-based behavior. Linux and container installations must configure these values in each
+`[server_n]` section. Each value should invoke a narrowly scoped control client that can perform only the requested
+Run8 lifecycle operation. R8DIUM executes these commands directly without a shell.
+
+For a container deployment, do not mount the Docker socket into the bot container. Use a small Run8 supervisor or
+control service and configure R8DIUM to call its client instead. This limits a compromised bot to Run8 lifecycle
+operations rather than giving it control of the Docker host.
+
+The bot token can be supplied through the `R8DIUM_BOT_TOKEN` environment variable or, preferably for containers, the
+file named by `R8DIUM_BOT_TOKEN_FILE`. `R8DIUM_CONFIG_FILE` can point to a configuration file outside the application
+directory.
+
 **NOTE**: The Discord server owner will always have access to commands, no matter what role(s) they have - so you will need to have the help of a user or another member of the server to test the role/bot permissions.
 
 

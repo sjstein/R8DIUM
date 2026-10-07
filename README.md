@@ -93,6 +93,8 @@ From the R8DIUM installation directory:
 * r8dium.py : Entry point
 * r8diumInclude.py : Helper routines / constants
 * botHandler.py : Define bot commands and interactions
+* serverControl.py : Cross-platform Run8 start, stop, and restart support
+* run8ControlClient.py : Client for a containerized Run8 supervisor
 * msgHandler.py : Middleman between bot, database, and (local) file system
 * dbAccess.py   : Database support
 * logScraper.py : Functions to parse through the Run8 log file

@@ -1,0 +1,12 @@
+.git
+.gitignore
+__pycache__/
+tests/
+archived/
+images/
+*.BAK
+*.cfg
+*.csv
+*.log
+*.pyc
+user_list.txt

@@ -20,16 +20,15 @@ from discord.ext import commands, tasks  # noqa
 import asyncio  # noqa
 import dbAccess
 import msgHandler
-import os
 import pathlib
-import psutil
 import r8diumInclude
+import serverControl
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
                            R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, R8SERVER_SECURITY_FNAME, R8SERVER_WORLD_FNAME,
                            R8SERVER_INDUSTRY_FNAME, R8SERVER_HUMP_FNAME, R8SERVER_TRAFFIC_FNAME, DB_FILENAME,
+                           R8SERVER_START_COMMAND, R8SERVER_STOP_COMMAND, R8SERVER_RESTART_COMMAND,
                            LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS, LOG_FILE, USER_DB)
-import shutil
-import subprocess
+import tempfile
 import zipfile
 
 discord_char_limit = 1900
@@ -75,19 +74,22 @@ def run_discord_bot(ldb):
             print(e)
         print(f'Starting banned user periodic checks')
         msgHandler.write_log_file(f'Starting banned user periodic checks')
-        scan_banned_users.start(ldb)
+        if not scan_banned_users.is_running():
+            scan_banned_users.start(ldb)
         print(f'Starting log-in periodic checks')
         msgHandler.write_log_file(f'Starting log-in periodic checks')
-        scan_logins.start(ldb)
+        if not scan_logins.is_running():
+            scan_logins.start(ldb)
         if int(INACT_DAYS) > 0:  # Not all server admins want to auto-expire users
             print(f'Starting expired user checks')
             msgHandler.write_log_file(f'Starting expired user checks')
-            expire_users.start(ldb)
+            if not expire_users.is_running():
+                expire_users.start(ldb)
         if int(UID_PURGE_TIME) > 0:  # Not all server admins want to purge UIDs from HostSecurity file
             print(f'Starting UID purge daemon')
             msgHandler.write_log_file(f'Starting UID purge daemon')
-            clean_uids.start(ldb)
-        dbAccess.send_statistics(ldb)
+            if not clean_uids.is_running():
+                clean_uids.start(ldb)
 
     @client.event
     async def on_member_remove(member):
@@ -114,7 +116,8 @@ def run_discord_bot(ldb):
                     rt_line = line.split(',', 1)[1]  # Very fragile due to the dependency on the log file format
                     raw_date = lft_line.split(' ')[
                         0]  # This date shows up as YYYY-MM-DD which is different than how we store
-                    date = datetime.datetime.strptime(raw_date, '%Y-%m-%d').strftime('%#m/%#d/%y')
+                    parsed_date = datetime.datetime.strptime(raw_date, '%Y-%m-%d')
+                    date = f'{parsed_date.month}/{parsed_date.day}/{parsed_date:%y}'
                     time = lft_line.split(' ')[1]
                     name = rt_line.split('Name:')[1].split('  PW:')[0]
                     pw = rt_line.split('PW:')[1].split('  UID:')[0]
@@ -171,13 +174,13 @@ def run_discord_bot(ldb):
     @tasks.loop(seconds=int(UID_PURGE_TIME))
     async def clean_uids(local_db):
         for filename in r8diumInclude.SECURITY_FILE:
-            current_mtime = pathlib.Path.stat(filename).st_mtime
+            current_mtime = pathlib.Path(filename).stat().st_mtime
             if current_mtime != hsf_mtime[filename]:
                 print(f'clean_uid daemon: purging HostSecurity file(s) of UIDs')
                 msgHandler.write_log_file(f'clean_uid daemon: purging HostSecurity file(s) of UIDs')
                 dbAccess.write_security_file(local_db, purge_uids=True)
                 for key in hsf_mtime:
-                    hsf_mtime[key] = pathlib.Path.stat(filename).st_mtime
+                    hsf_mtime[key] = pathlib.Path(filename).stat().st_mtime
                 break
 
     @tasks.loop(seconds=int(BAN_SCAN_TIME))
@@ -444,24 +447,19 @@ def run_discord_bot(ldb):
             response += 'Use "/server_info" for a list of valid server names.'
             await interaction.response.send_message(response, ephemeral=True)  # noqa
             return
-        else:
-            spath = R8SERVER_PATH[R8SERVER_NAME.index(sname)]
-        # Attempt to find existing running server instance
-        response = f'No running server matching {sname} found.\n'
-        for proc in psutil.process_iter(['pid', 'name', 'exe']):
-            try:
-                # Print process ID, Name, and Executable path
-                if proc.info['name'] == "Run-8 Train Simulator V3.exe":
-                    if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
-                        process = psutil.Process(proc.info['pid'])
-                        process.terminate()
-                        response = f'Server Restart Initiated. \nServer {sname} (PID {proc.info["pid"]}) terminated.\n'
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                print(f'Exception in restart_server command - either server not running, or unable to terminate')
-                pass  
-        # Attempt to run server
-        response += f'...\nServer {sname} starting up.\nNOTE: Wait at LEAST 5 minutes before enabling Auto DS (Otto)'
-        subprocess.run(spath + '\startServer.bat')
+        server_index = R8SERVER_NAME.index(sname)
+        result = await asyncio.to_thread(
+            serverControl.control_server,
+            'restart',
+            sname,
+            R8SERVER_PATH[server_index],
+            R8SERVER_START_COMMAND[server_index],
+            R8SERVER_STOP_COMMAND[server_index],
+            R8SERVER_RESTART_COMMAND[server_index],
+        )
+        response = result.message
+        if result.success:
+            response += '\nNOTE: Wait at LEAST 5 minutes before enabling Auto DS (Otto).'
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
@@ -480,20 +478,17 @@ def run_discord_bot(ldb):
             response += 'Use "/server_info" for a list of valid server names.'
             await interaction.response.send_message(response, ephemeral=True)  # noqa
             return
-        else:
-            spath = R8SERVER_PATH[R8SERVER_NAME.index(sname)]
-        # Attempt to find existing running server instance
-        response = f'No running server matching {sname} found.\n'
-        for proc in psutil.process_iter(['pid', 'name', 'exe']):
-            try:
-                if proc.info['name'] == "Run-8 Train Simulator V3.exe":
-                    if proc.info['exe'] == spath + '\Run-8 Train Simulator V3.exe':
-                        process = psutil.Process(proc.info['pid'])
-                        process.terminate()
-                        response = f'Server Kill initiated.\nServer {sname} (PID {proc.info["pid"]}) terminated.\n'
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                print(f'Exception in kill_server command - either server not running, or unable to terminate')
-                pass
+        server_index = R8SERVER_NAME.index(sname)
+        result = await asyncio.to_thread(
+            serverControl.control_server,
+            'stop',
+            sname,
+            R8SERVER_PATH[server_index],
+            R8SERVER_START_COMMAND[server_index],
+            R8SERVER_STOP_COMMAND[server_index],
+            R8SERVER_RESTART_COMMAND[server_index],
+        )
+        response = result.message
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
@@ -514,31 +509,38 @@ def run_discord_bot(ldb):
             response += 'Use "/server_info" for a list of valid server names.'
             await interaction.response.send_message(response, ephemeral=True)  # noqa
             return
-        else:
-            if fname.lower() == 'hump':
-                spath = R8SERVER_HUMP_FNAME[R8SERVER_NAME.index(sname)]
-            elif fname.lower() == 'industry':
-                spath = R8SERVER_INDUSTRY_FNAME[R8SERVER_NAME.index(sname)]
-            elif fname.lower() == 'traffic':
-                spath = R8SERVER_TRAFFIC_FNAME[R8SERVER_NAME.index(sname)]
-            elif fname.lower() == 'world':
-                dest = shutil.copyfile(R8SERVER_WORLD_FNAME[R8SERVER_NAME.index(sname)],'Auto Save World.xml')
-                with zipfile.ZipFile('Auto Save World.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
-                    zf.write('Auto Save World.xml')
-                spath = 'Auto Save World.zip'
+        server_index = R8SERVER_NAME.index(sname)
+        eligible_files = {
+            'hump': R8SERVER_HUMP_FNAME[server_index],
+            'industry': R8SERVER_INDUSTRY_FNAME[server_index],
+            'traffic': R8SERVER_TRAFFIC_FNAME[server_index],
+            'world': R8SERVER_WORLD_FNAME[server_index],
+        }
+        requested_file = eligible_files.get(fname.lower())
+        if requested_file is None:
+            response = f'Filename "{fname}" not found\n'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
+        if requested_file == '':
+            response = f'**Error**: {fname} file not eligible for download.\n'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
+        requested_file = pathlib.Path(requested_file)
+        if not requested_file.is_file():
+            response = f'**Error**: the configured {fname} file does not exist.\n'
+            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            return
 
-            else:
-                response = f'Filename "{fname}" not found\n'
-                await interaction.response.send_message(response, ephemeral=True)  # noqa
-                return
-            if spath == '':
-                response = f'**Error**: {fname} file not eligible for download.\n'
-                await interaction.response.send_message(response, ephemeral=True)  # noqa
-                return
-        await interaction.response.send_message(file=discord.File(spath), ephemeral=True)  # noqa
-        if spath is 'Auto Save World.zip':
-            os.remove('Auto Save World.zip')
-            os.remove('Auto Save World.xml')
+        if fname.lower() != 'world':
+            await interaction.response.send_message(file=discord.File(str(requested_file)), ephemeral=True)  # noqa
+            return
+
+        source = pathlib.Path(requested_file)
+        with tempfile.TemporaryDirectory(prefix='r8dium-world-') as temp_dir:
+            archive = pathlib.Path(temp_dir) / 'Auto Save World.zip'
+            with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                zip_file.write(source, arcname='Auto Save World.xml')
+            await interaction.response.send_message(file=discord.File(str(archive)), ephemeral=True)  # noqa
 
     @client.tree.command(name='admin_file_download', description=f'Download admin files from server')
     @app_commands.describe(fname='The name of the file to send [database, log, r8dium_log, security]',

@@ -15,16 +15,16 @@
 # If not, see <https://www.gnu.org/licenses/>.
 ##########################
 import csv
-import hashlib
-import requests
-import uuid
+import os
+from pathlib import Path
+import tempfile
+import threading
 
 import xmltodict
-from r8diumInclude import SECURITY_FILE, DB_FILENAME, SEND_STATS, SOFTWARE_VERSION, STAT_URL, STAT_TOKEN
+from r8diumInclude import SECURITY_FILE, DB_FILENAME
 
-# Don't bother trying to send stats until we get a decent endpoint
-if STAT_URL == '':
-    SEND_STATS = False
+
+_file_lock = threading.RLock()
 
 # Below define the tags which Run8 uses inside the security XML
 XML_ROOT_NAME = 'HostSecurityData'
@@ -93,30 +93,28 @@ def load_db(filename: str) -> list:
 
 
 def save_db(filename: str, ldb: list) -> int:
+    target = Path(filename)
+    temp_name = None
     try:
-        with open(filename, 'w', newline='') as csvfile:
-            csvwriter = csv.DictWriter(csvfile, fieldnames=db_field_list)
-            csvwriter.writeheader()
-            for row in ldb:
-                csvwriter.writerow(row)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with _file_lock:
+            with tempfile.NamedTemporaryFile(
+                    'w', newline='', dir=target.parent, prefix=f'.{target.name}.', delete=False) as csvfile:
+                temp_name = csvfile.name
+                csvwriter = csv.DictWriter(csvfile, fieldnames=db_field_list)
+                csvwriter.writeheader()
+                for row in ldb:
+                    csvwriter.writerow(row)
+                csvfile.flush()
+                os.fsync(csvfile.fileno())
+            os.replace(temp_name, target)
         return len(ldb)
 
     except Exception as e:
+        if temp_name:
+            Path(temp_name).unlink(missing_ok=True)
         print(f'\nr8dium ({__name__}.py: FATAL exception in save_db, type unknown - contact devs')
         exit(-1)
-
-
-def send_statistics(ldb: list):
-    if SEND_STATS:
-        # Create unique hashed server id
-        server_mac_addr = (
-            ''.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) for elements in range(5, -1, -1)]))
-        server_id = hashlib.md5((server_mac_addr + SECURITY_FILE[0]).encode()).hexdigest()
-
-        header_dict = {'Authorization': STAT_TOKEN}
-        put_dict = {'a': server_id, 'b': SOFTWARE_VERSION, 'c': len(ldb)}
-        return_val = requests.post(STAT_URL, data=put_dict, headers=header_dict)
-    return
 
 
 def write_security_file(ldb: list, purge_uids=False):
@@ -145,12 +143,23 @@ def write_security_file(ldb: list, purge_uids=False):
 
     try:
         for fname in SECURITY_FILE:
-            wp = open(fname, 'w')
-            wp.write(xml_out)
-            wp.close()
+            target = Path(fname)
+            temp_name = None
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with _file_lock:
+                with tempfile.NamedTemporaryFile(
+                        'w', encoding='utf-8', dir=target.parent,
+                        prefix=f'.{target.name}.', delete=False) as xmlfile:
+                    temp_name = xmlfile.name
+                    xmlfile.write(xml_out)
+                    xmlfile.flush()
+                    os.fsync(xmlfile.fileno())
+                os.replace(temp_name, target)
         return 'file written'
 
     except Exception as e:
+        if temp_name:
+            Path(temp_name).unlink(missing_ok=True)
         print(f'\nr8dium ({__name__}.py: FATAL exception in write_security_file, type unknown - contact devs')
         exit(-1)
 
