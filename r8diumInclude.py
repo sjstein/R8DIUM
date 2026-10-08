@@ -56,6 +56,8 @@ try:
     EXP_SCAN_TIME = config['discord']['expire_scan_time']
     INACT_DAYS = config['discord']['inactive_days_threshold']
     UID_PURGE_TIME = config['discord']['UID_purge_timer']
+    RUN8_EVENT_LOG = os.environ.get('RUN8_EVENT_LOG', '')
+    RUN8_EVENT_STATE_FILE = os.environ.get('RUN8_EVENT_STATE_FILE', '/state/run8-events.offset')
 
     R8SERVER_NAME = list()
     R8SERVER_PATH = list()
