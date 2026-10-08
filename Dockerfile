@@ -7,7 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     R8DIUM_CONFIG_FILE=/config/r8dium.cfg \
     R8DIUM_BOT_TOKEN_FILE=/run/secrets/r8dium_bot_token \
-    RUN8_CONTROL_SOCKET=/run8-control/control.sock
+    RUN8_CONTROL_SOCKET=/run8-control/control.sock \
+    RUN8_EVENT_LOG=/run8-control/events.jsonl \
+    RUN8_EVENT_STATE_FILE=/state/run8-events.offset
 
 RUN groupadd --gid "${R8DIUM_GID}" r8dium \
     && useradd --create-home --uid "${R8DIUM_UID}" --gid "${R8DIUM_GID}" --shell /usr/sbin/nologin r8dium \

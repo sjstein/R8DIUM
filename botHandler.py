@@ -23,16 +23,19 @@ import msgHandler
 import pathlib
 import r8diumInclude
 import serverControl
+from run8EventMonitor import EventCursor, format_unexpected_exit
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
                            R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, R8SERVER_SECURITY_FNAME, R8SERVER_WORLD_FNAME,
                            R8SERVER_INDUSTRY_FNAME, R8SERVER_HUMP_FNAME, R8SERVER_TRAFFIC_FNAME, DB_FILENAME,
                            R8SERVER_START_COMMAND, R8SERVER_STOP_COMMAND, R8SERVER_RESTART_COMMAND,
-                           LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS, LOG_FILE, USER_DB)
+                           LOG_SCAN_TIME, INACT_DAYS, EXP_SCAN_TIME, UID_PURGE_TIME, BOT_STATUS, LOG_FILE, USER_DB,
+                           RUN8_EVENT_LOG, RUN8_EVENT_STATE_FILE)
 import tempfile
 import zipfile
 
 discord_char_limit = 1900
 hsf_mtime = {}
+run8_event_cursor = EventCursor(RUN8_EVENT_LOG, RUN8_EVENT_STATE_FILE) if RUN8_EVENT_LOG else None
 tmp_filename = 'user_list.txt'  # File to hold long user list for sending to Discord (avoiding character limit)
 
 
@@ -90,6 +93,10 @@ def run_discord_bot(ldb):
             msgHandler.write_log_file(f'Starting UID purge daemon')
             if not clean_uids.is_running():
                 clean_uids.start(ldb)
+        if run8_event_cursor and not scan_run8_events.is_running():
+            print('Starting Run8 unexpected-exit checks')
+            msgHandler.write_log_file('Starting Run8 unexpected-exit checks')
+            scan_run8_events.start()
 
     @client.event
     async def on_member_remove(member):
@@ -145,6 +152,24 @@ def run_discord_bot(ldb):
                 dbAccess.save_db(DB_FILENAME, ldb)
             fp.close()
         return
+
+    @tasks.loop(seconds=15)
+    async def scan_run8_events():
+        try:
+            for event, next_offset in run8_event_cursor.read_pending():
+                if event and event.get('event') == 'unexpected_exit':
+                    admin_channel = discord.utils.get(client.get_all_channels(), name=CH_ADMIN)
+                    if admin_channel is None:
+                        msgHandler.write_log_file(
+                            f'Unable to report Run8 exit: admin channel [{CH_ADMIN}] was not found'
+                        )
+                        return
+                    message = format_unexpected_exit(event)
+                    await admin_channel.send(message)
+                    msgHandler.write_log_file(message)
+                run8_event_cursor.commit(next_offset)
+        except (OSError, ValueError, discord.DiscordException) as error:
+            msgHandler.write_log_file(f'Run8 event monitor error: {error}')
 
     @tasks.loop(minutes=int(EXP_SCAN_TIME))
     async def expire_users(ldb):

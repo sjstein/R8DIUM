@@ -1,6 +1,7 @@
 # R8DIUM Changelog
 
 ### Unreleased
+* Added optional administrator notifications when the Linux Run8 supervisor automatically restarts Run8 after an unexpected exit.
 * Added configurable cross-platform start, stop, and restart commands for Linux and container deployments (#148).
 * Preserved the existing Windows `startServer.bat` and process control behavior when commands are left blank.
 * Updated world-save downloads to use platform-independent temporary paths.

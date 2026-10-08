@@ -71,6 +71,11 @@ The bot token can be supplied through the `R8DIUM_BOT_TOKEN` environment variabl
 file named by `R8DIUM_BOT_TOKEN_FILE`. `R8DIUM_CONFIG_FILE` can point to a configuration file outside the application
 directory.
 
+When the Run8 supervisor provides a newline-delimited JSON event stream, set `RUN8_EVENT_LOG` to that file and
+`RUN8_EVENT_STATE_FILE` to a persistent cursor file. R8DIUM will notify `ch_admin` after an unexpected Run8 exit and
+automatic restart. Leave `RUN8_EVENT_LOG` unset to disable this optional monitor. The official container defaults are
+`/run8-control/events.jsonl` and `/state/run8-events.offset`.
+
 **NOTE**: The Discord server owner will always have access to commands, no matter what role(s) they have - so you will need to have the help of a user or another member of the server to test the role/bot permissions.
 
 
