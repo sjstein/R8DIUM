@@ -72,9 +72,11 @@ file named by `R8DIUM_BOT_TOKEN_FILE`. `R8DIUM_CONFIG_FILE` can point to a confi
 directory.
 
 When the Run8 supervisor provides a newline-delimited JSON event stream, set `RUN8_EVENT_LOG` to that file and
-`RUN8_EVENT_STATE_FILE` to a persistent cursor file. R8DIUM will notify `ch_admin` after an unexpected Run8 exit and
-automatic restart. Leave `RUN8_EVENT_LOG` unset to disable this optional monitor. The official container defaults are
-`/run8-control/events.jsonl` and `/state/run8-events.offset`.
+`RUN8_EVENT_STATE_FILE` to a persistent cursor file. R8DIUM will notify `ch_admin` when an unexpected Run8 exit causes
+an automatic restart, when Auto Dispatcher (Otto) is engaged after world loading, or when automatic Otto engagement
+fails. A successful `/restart_server` command also identifies the requesting Discord user in `ch_admin`; Otto's later
+readiness notification is sent separately. Leave `RUN8_EVENT_LOG` unset to disable the optional supervisor-event
+monitor. The official container defaults are `/run8-control/events.jsonl` and `/state/run8-events.offset`.
 
 **NOTE**: The Discord server owner will always have access to commands, no matter what role(s) they have - so you will need to have the help of a user or another member of the server to test the role/bot permissions.
 

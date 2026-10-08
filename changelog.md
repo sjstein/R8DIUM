@@ -1,6 +1,7 @@
 # R8DIUM Changelog
 
 ### Unreleased
+* Added cause-specific administrator notifications for manual and crash-driven restarts, followed by Otto readiness or failure notifications.
 * Added optional administrator notifications when the Linux Run8 supervisor automatically restarts Run8 after an unexpected exit.
 * Added configurable cross-platform start, stop, and restart commands for Linux and container deployments (#148).
 * Preserved the existing Windows `startServer.bat` and process control behavior when commands are left blank.

@@ -23,7 +23,7 @@ import msgHandler
 import pathlib
 import r8diumInclude
 import serverControl
-from run8EventMonitor import EventCursor, format_unexpected_exit
+from run8EventMonitor import EventCursor, format_manual_restart, format_supervisor_event
 from r8diumInclude import (TOKEN, BAN_SCAN_TIME, SOFTWARE_VERSION, CH_ADMIN, CH_LOG, R8SERVER_ADDR, R8SERVER_PORT,
                            R8SERVER_NAME, R8SERVER_LOG, R8SERVER_PATH, R8SERVER_SECURITY_FNAME, R8SERVER_WORLD_FNAME,
                            R8SERVER_INDUSTRY_FNAME, R8SERVER_HUMP_FNAME, R8SERVER_TRAFFIC_FNAME, DB_FILENAME,
@@ -157,14 +157,14 @@ def run_discord_bot(ldb):
     async def scan_run8_events():
         try:
             for event, next_offset in run8_event_cursor.read_pending():
-                if event and event.get('event') == 'unexpected_exit':
+                message = format_supervisor_event(event) if event else None
+                if message:
                     admin_channel = discord.utils.get(client.get_all_channels(), name=CH_ADMIN)
                     if admin_channel is None:
                         msgHandler.write_log_file(
-                            f'Unable to report Run8 exit: admin channel [{CH_ADMIN}] was not found'
+                            f'Unable to report Run8 event: admin channel [{CH_ADMIN}] was not found'
                         )
                         return
-                    message = format_unexpected_exit(event)
                     await admin_channel.send(message)
                     msgHandler.write_log_file(message)
                 run8_event_cursor.commit(next_offset)
@@ -483,10 +483,19 @@ def run_discord_bot(ldb):
             R8SERVER_RESTART_COMMAND[server_index],
         )
         response = result.message
+        actor = f'{interaction.user.mention} ({interaction.user.display_name})'
         if result.success:
-            response += '\nNOTE: Wait at LEAST 5 minutes before enabling Auto DS (Otto).'
+            admin_message = format_manual_restart(sname, actor, result.message)
+            response += '\nAuto Dispatcher will engage automatically after all trains load.'
+        else:
+            admin_message = '\n'.join([
+                '**Run8 manual restart failed**',
+                f'Server: `{sname}`',
+                f'Requested by: {actor}',
+                f'Reason: {result.message}',
+            ])
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
-        await admin_channel.send(response)
+        await admin_channel.send(admin_message)
         await interaction.response.send_message(response, ephemeral=True)  # noqa
 
     @client.tree.command(name='kill_server', description=f'Kill Run8 server')

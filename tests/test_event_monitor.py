@@ -3,7 +3,12 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from run8EventMonitor import EventCursor, format_unexpected_exit
+from run8EventMonitor import (
+    EventCursor,
+    format_manual_restart,
+    format_supervisor_event,
+    format_unexpected_exit,
+)
 
 
 class EventCursorTests(unittest.TestCase):
@@ -57,9 +62,48 @@ class EventCursorTests(unittest.TestCase):
         })
 
         self.assertIn('unexpected exit', message)
+        self.assertIn('automatically after a crash', message)
         self.assertIn('exit status: `2`', message)
         self.assertIn('OOM kills: `0`', message)
-        self.assertIn('Auto Dispatcher', message)
+        self.assertIn('separate notification', message)
+
+    def test_otto_success_event_has_readiness_message(self):
+        message = format_supervisor_event({
+            'event': 'otto_engaged',
+            'timestamp_utc': '2026-10-08T15:13:44Z',
+            'attempt': 1,
+        })
+
+        self.assertIn('startup complete', message)
+        self.assertIn('all signaled routes', message)
+        self.assertIn('attempt: `1`', message)
+
+    def test_otto_failure_event_requests_attention(self):
+        message = format_supervisor_event({
+            'event': 'otto_activation_failed',
+            'error': 'success marker missing',
+            'diagnostic_file': '/run8-control/diagnostics/otto.png',
+        })
+
+        self.assertIn('requires attention', message)
+        self.assertIn('success marker missing', message)
+        self.assertIn('otto.png', message)
+
+    def test_unknown_event_is_ignored(self):
+        self.assertIsNone(format_supervisor_event({'event': 'future_event'}))
+
+    def test_manual_restart_identifies_actor_and_cause(self):
+        message = format_manual_restart(
+            'High Green',
+            '<@1234> (Dispatcher)',
+            'Run8 stopped. Run8 start initiated.',
+        )
+
+        self.assertIn('Discord administrator', message)
+        self.assertIn('High Green', message)
+        self.assertIn('<@1234> (Dispatcher)', message)
+        self.assertIn('/restart_server', message)
+        self.assertIn('separate notification', message)
 
 
 if __name__ == '__main__':
