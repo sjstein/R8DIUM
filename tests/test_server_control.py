@@ -154,6 +154,26 @@ class ServerControlTests(unittest.TestCase):
         self.assertFalse(result.success)
         start_server.assert_not_called()
 
+    @mock.patch.object(serverControl.os, 'name', 'nt')
+    @mock.patch('serverControl.Path')
+    @mock.patch('serverControl.subprocess.Popen')
+    def test_windows_start_detaches_without_capturing_child_output(self, popen, path):
+        start_script = mock.Mock()
+        start_script.is_file.return_value = True
+        start_script.__str__ = mock.Mock(return_value=r'C:\Run8\startServer.bat')
+        path.return_value.__truediv__.return_value = start_script
+
+        result = serverControl._start_windows_server('HGR8', r'C:\Run8')
+
+        self.assertTrue(result.success)
+        popen.assert_called_once_with(
+            ['cmd.exe', '/c', r'C:\Run8\startServer.bat'],
+            cwd=r'C:\Run8',
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
     def test_lifecycle_operations_for_one_server_are_serialized(self):
         first_entered = threading.Event()
         release_first = threading.Event()

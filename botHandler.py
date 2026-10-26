@@ -495,9 +495,9 @@ def run_discord_bot(ldb):
                 f'Requested by: {actor}',
                 f'Reason: {result.message}',
             ])
+        await interaction.edit_original_response(content=response)
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(admin_message)
-        await interaction.edit_original_response(content=response)
 
     @client.tree.command(name='kill_server', description=f'Kill Run8 server')
     @app_commands.describe(sname='Server name to kill')
@@ -525,9 +525,9 @@ def run_discord_bot(ldb):
             R8SERVER_RESTART_COMMAND[server_index],
         )
         response = result.message
+        await interaction.edit_original_response(content=response)
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
-        await interaction.edit_original_response(content=response)
 
     @client.tree.command(name='download_file', description=f'Download a configuration file from server')
     @app_commands.describe(fname='The name of the file to send [hump, industry, traffic, world]',

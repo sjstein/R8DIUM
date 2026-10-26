@@ -192,7 +192,18 @@ def _start_windows_server(server_name: str, launch_path: str) -> ControlResult:
     if not start_script.is_file():
         return ControlResult(False, f'Start script not found: {start_script}')
 
-    return _run_arguments(['cmd.exe', '/c', str(start_script)], launch_path)
+    try:
+        subprocess.Popen(
+            ['cmd.exe', '/c', str(start_script)],
+            cwd=launch_path or None,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, ValueError) as error:
+        return ControlResult(False, f'Unable to start server {server_name}: {error}')
+
+    return ControlResult(True, f'Server {server_name} start initiated.')
 
 
 def control_server(
