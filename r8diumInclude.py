@@ -18,7 +18,7 @@ import configparser
 import os
 from pathlib import Path
 
-SOFTWARE_VERSION = 'Halogenated'
+SOFTWARE_VERSION = 'Iconic'
 
 CONFIG_FILE = os.environ.get('R8DIUM_CONFIG_FILE', 'r8dium.cfg')
 
