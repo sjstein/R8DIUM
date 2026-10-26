@@ -13,10 +13,16 @@ import os
 from pathlib import Path
 import shlex
 import subprocess
+import threading
 
 
 RUN8_EXECUTABLE = 'Run-8 Train Simulator V3.exe'
 CONTROL_TIMEOUT_SECONDS = 60
+STOP_TIMEOUT_SECONDS = 30
+
+
+_server_locks: dict[str, threading.Lock] = {}
+_server_locks_guard = threading.Lock()
 
 
 @dataclass(frozen=True)
@@ -67,6 +73,33 @@ def _same_executable(executable: str | None, launch_path: str) -> bool:
     return actual == expected
 
 
+def _server_lock(launch_path: str) -> threading.Lock:
+    """Return the process-local lifecycle lock for one Run8 installation."""
+    key = os.path.normcase(os.path.abspath(launch_path))
+    with _server_locks_guard:
+        return _server_locks.setdefault(key, threading.Lock())
+
+
+def _matching_windows_processes(psutil, launch_path: str):
+    """Find every Run8 process for launch_path and report inspection failures."""
+    matches = []
+    failures = []
+    expected_name = os.path.normcase(RUN8_EXECUTABLE)
+
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            if os.path.normcase(proc.info.get('name') or '') != expected_name:
+                continue
+            if _same_executable(proc.exe(), launch_path):
+                matches.append(proc)
+        except psutil.NoSuchProcess:
+            continue
+        except (psutil.AccessDenied, psutil.ZombieProcess) as error:
+            failures.append(f'PID {proc.info.get("pid", "unknown")}: {error}')
+
+    return matches, failures
+
+
 def _stop_windows_server(server_name: str, launch_path: str) -> ControlResult:
     if os.name != 'nt':
         return ControlResult(
@@ -76,18 +109,76 @@ def _stop_windows_server(server_name: str, launch_path: str) -> ControlResult:
 
     import psutil
 
-    for proc in psutil.process_iter(['pid', 'name', 'exe']):
-        try:
-            if proc.info['name'] == RUN8_EXECUTABLE and _same_executable(proc.info['exe'], launch_path):
-                proc.terminate()
-                return ControlResult(
-                    True,
-                    f'Server {server_name} (PID {proc.info["pid"]}) termination initiated.',
-                )
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
+    processes, inspection_failures = _matching_windows_processes(psutil, launch_path)
+    if inspection_failures:
+        return ControlResult(
+            False,
+            f'Unable to inspect all Run8 processes for {server_name}: '
+            + '; '.join(inspection_failures),
+        )
+    if not processes:
+        return ControlResult(False, f'No running server matching {server_name} was found.')
 
-    return ControlResult(False, f'No running server matching {server_name} was found.')
+    signaled = []
+    termination_failures = []
+    for proc in processes:
+        try:
+            proc.terminate()
+            signaled.append(proc)
+        except psutil.NoSuchProcess:
+            continue
+        except (psutil.AccessDenied, psutil.ZombieProcess) as error:
+            termination_failures.append(f'PID {proc.info.get("pid", "unknown")}: {error}')
+
+    if termination_failures:
+        return ControlResult(
+            False,
+            f'Unable to terminate all Run8 processes for {server_name}: '
+            + '; '.join(termination_failures),
+        )
+
+    _, survivors = psutil.wait_procs(signaled, timeout=STOP_TIMEOUT_SECONDS)
+    force_failures = []
+    for proc in survivors:
+        try:
+            proc.kill()
+        except psutil.NoSuchProcess:
+            continue
+        except (psutil.AccessDenied, psutil.ZombieProcess) as error:
+            force_failures.append(f'PID {proc.info.get("pid", "unknown")}: {error}')
+
+    if force_failures:
+        return ControlResult(
+            False,
+            f'Unable to force-stop all Run8 processes for {server_name}: '
+            + '; '.join(force_failures),
+        )
+
+    if survivors:
+        _, survivors = psutil.wait_procs(survivors, timeout=STOP_TIMEOUT_SECONDS)
+    if survivors:
+        survivor_pids = ', '.join(str(proc.info.get('pid', 'unknown')) for proc in survivors)
+        return ControlResult(
+            False,
+            f'Run8 processes for {server_name} did not exit (PIDs: {survivor_pids}).',
+        )
+
+    remaining, verification_failures = _matching_windows_processes(psutil, launch_path)
+    if verification_failures:
+        return ControlResult(
+            False,
+            f'Unable to verify that Run8 stopped for {server_name}: '
+            + '; '.join(verification_failures),
+        )
+    if remaining:
+        remaining_pids = ', '.join(str(proc.info.get('pid', 'unknown')) for proc in remaining)
+        return ControlResult(
+            False,
+            f'Run8 is still running for {server_name} (PIDs: {remaining_pids}).',
+        )
+
+    stopped_pids = ', '.join(str(proc.info.get('pid', 'unknown')) for proc in processes)
+    return ControlResult(True, f'Server {server_name} stopped (PIDs: {stopped_pids}).')
 
 
 def _start_windows_server(server_name: str, launch_path: str) -> ControlResult:
@@ -112,6 +203,24 @@ def control_server(
         stop_command: str = '',
         restart_command: str = '') -> ControlResult:
     """Start, stop, or restart one configured Run8 server."""
+    with _server_lock(launch_path):
+        return _control_server_unlocked(
+            action,
+            server_name,
+            launch_path,
+            start_command,
+            stop_command,
+            restart_command,
+        )
+
+
+def _control_server_unlocked(
+        action: str,
+        server_name: str,
+        launch_path: str,
+        start_command: str = '',
+        stop_command: str = '',
+        restart_command: str = '') -> ControlResult:
     commands = {
         'start': start_command,
         'stop': stop_command,
