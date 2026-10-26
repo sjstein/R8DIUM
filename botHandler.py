@@ -461,6 +461,7 @@ def run_discord_bot(ldb):
     @client.tree.command(name='restart_server', description=f'Kill Run8 server and restart')
     @app_commands.describe(sname='Server name to restart')
     async def restart_server(interaction: discord.Interaction, sname: str = ''):
+        await interaction.response.defer(ephemeral=True, thinking=True)
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
@@ -470,7 +471,7 @@ def run_discord_bot(ldb):
         if sname not in R8SERVER_NAME:
             response = f'Server name [{sname}] not known\n'
             response += 'Use "/server_info" for a list of valid server names.'
-            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            await interaction.edit_original_response(content=response)
             return
         server_index = R8SERVER_NAME.index(sname)
         result = await asyncio.to_thread(
@@ -496,11 +497,12 @@ def run_discord_bot(ldb):
             ])
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(admin_message)
-        await interaction.response.send_message(response, ephemeral=True)  # noqa
+        await interaction.edit_original_response(content=response)
 
     @client.tree.command(name='kill_server', description=f'Kill Run8 server')
     @app_commands.describe(sname='Server name to kill')
     async def kill_server(interaction: discord.Interaction, sname: str = ''):
+        await interaction.response.defer(ephemeral=True, thinking=True)
         if CH_LOG != 'none':
             log_channel = discord.utils.get(interaction.guild.channels, name=CH_LOG)  # return channel id from name
             await log_channel.send(log_message(interaction))
@@ -510,7 +512,7 @@ def run_discord_bot(ldb):
         if sname not in R8SERVER_NAME:
             response = f'Server name [{sname}] not known\n'
             response += 'Use "/server_info" for a list of valid server names.'
-            await interaction.response.send_message(response, ephemeral=True)  # noqa
+            await interaction.edit_original_response(content=response)
             return
         server_index = R8SERVER_NAME.index(sname)
         result = await asyncio.to_thread(
@@ -525,7 +527,7 @@ def run_discord_bot(ldb):
         response = result.message
         admin_channel = discord.utils.get(interaction.guild.channels, name=CH_ADMIN)
         await admin_channel.send(response)
-        await interaction.response.send_message(response, ephemeral=True)  # noqa
+        await interaction.edit_original_response(content=response)
 
     @client.tree.command(name='download_file', description=f'Download a configuration file from server')
     @app_commands.describe(fname='The name of the file to send [hump, industry, traffic, world]',
